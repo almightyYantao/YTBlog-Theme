@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="324" viewBox="0 0 920 324">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0f14"/>
+      <stop offset="100%" stop-color="#0f1621"/>
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1b36"/>
+      <stop offset="55%" stop-color="#1a3a6e"/>
+      <stop offset="100%" stop-color="#1e3a5f"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a2744"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="btn" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="30%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="70%" cy="60%" r="40%">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="920" height="324" fill="url(#bg)"/>
+  <rect width="920" height="324" fill="url(#glow1)"/>
+  <rect width="920" height="324" fill="url(#glow2)"/>
+
+  <rect width="920" height="200" fill="url(#hero)"/>
+
+  <circle cx="80"  cy="40"  r="1.5" fill="#3b82f6" opacity="0.5"/>
+  <circle cx="220" cy="90"  r="1"   fill="#3b82f6" opacity="0.4"/>
+  <circle cx="340" cy="30"  r="1.5" fill="#93c5fd" opacity="0.35"/>
+  <circle cx="130" cy="160" r="1"   fill="#60a5fa" opacity="0.4"/>
+  <circle cx="400" cy="150" r="1.5" fill="#3b82f6" opacity="0.3"/>
+
+  <rect x="52" y="46" width="72" height="20" rx="10" fill="rgba(59,130,246,0.2)" stroke="rgba(59,130,246,0.35)" stroke-width="1"/>
+  <text x="64" y="60" font-family="monospace" font-size="9" fill="#93c5fd">// LATEST</text>
+
+  <text x="52" y="102" font-family="'Inter',system-ui,sans-serif" font-size="28" font-weight="800" fill="#f8fafc" letter-spacing="-0.5">YTBlog</text>
+  <text x="52" y="130" font-family="'Inter',system-ui,sans-serif" font-size="28" font-weight="800" fill="#f8fafc" letter-spacing="-0.5">Theme</text>
+
+  <text x="52" y="153" font-family="'Inter',system-ui,sans-serif" font-size="12" fill="rgba(255,255,255,0.6)">现代风格 · 粒子背景 · 短代码 · 多层加密</text>
+
+  <rect x="52"  y="164" width="90" height="28" rx="8" fill="url(#btn)"/>
+  <text x="78"  y="182" font-family="'Inter',system-ui,sans-serif" font-size="11" fill="#fff" font-weight="600">阅读全文 →</text>
+  <rect x="152" y="164" width="72" height="28" rx="8" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <text x="169" y="182" font-family="'Inter',system-ui,sans-serif" font-size="11" fill="rgba(255,255,255,0.8)">浏览文章</text>
+
+  <rect x="490" y="20" width="400" height="168" rx="12" fill="url(#card)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <circle cx="516" cy="42" r="6" fill="#ff5f57"/>
+  <circle cx="534" cy="42" r="6" fill="#febc2e"/>
+  <circle cx="552" cy="42" r="6" fill="#28c840"/>
+  <line x1="490" y1="58" x2="890" y2="58" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <text x="516" y="84"  font-family="'JetBrains Mono',monospace" font-size="12" fill="#f97316">const</text>
+  <text x="551" y="84"  font-family="'JetBrains Mono',monospace" font-size="12" fill="#e5e7eb"> blog = {</text>
+  <text x="524" y="101" font-family="'JetBrains Mono',monospace" font-size="12" fill="#9ca3af">  title:</text>
+  <text x="578" y="101" font-family="'JetBrains Mono',monospace" font-size="12" fill="#86efac"> 'YTBlog',</text>
+  <text x="524" y="118" font-family="'JetBrains Mono',monospace" font-size="12" fill="#9ca3af">  focus:</text>
+  <text x="578" y="118" font-family="'JetBrains Mono',monospace" font-size="12" fill="#86efac"> 'LATEST',</text>
+  <text x="524" y="135" font-family="'JetBrains Mono',monospace" font-size="12" fill="#9ca3af">  since:</text>
+  <text x="578" y="135" font-family="'JetBrains Mono',monospace" font-size="12" fill="#86efac"> '2026'</text>
+  <text x="516" y="152" font-family="'JetBrains Mono',monospace" font-size="12" fill="#e5e7eb">}</text>
+  <text x="516" y="172" font-family="'JetBrains Mono',monospace" font-size="12" fill="#f97316">function</text>
+  <text x="565" y="172" font-family="'JetBrains Mono',monospace" font-size="12" fill="#60a5fa"> theme</text>
+  <text x="604" y="172" font-family="'JetBrains Mono',monospace" font-size="12" fill="#e5e7eb">() { ... }</text>
+
+  <rect x="0" y="200" width="920" height="40" fill="rgba(17,24,39,0.9)"/>
+  <text x="30"  y="226" font-family="'Inter',system-ui,sans-serif" font-size="12" fill="rgba(255,255,255,0.5)">YTBlog</text>
+  <text x="100" y="226" font-family="'Inter',system-ui,sans-serif" font-size="11" fill="rgba(255,255,255,0.3)">首页   技术   随笔   工具   RSS</text>
+
+  <rect x="30" y="252" width="200" height="60" rx="10" fill="rgba(17,24,39,0.8)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+  <rect x="30" y="252" width="200" height="20" rx="10" fill="rgba(37,99,235,0.25)"/>
+  <text x="42" y="267" font-family="'Inter',system-ui,sans-serif" font-size="9" fill="#93c5fd">// ENGINEERING</text>
+  <text x="42" y="285" font-family="'Inter',system-ui,sans-serif" font-size="10" font-weight="600" fill="#f0f4ff">构建现代 Typecho 主题</text>
+  <text x="42" y="300" font-family="'Inter',system-ui,sans-serif" font-size="9" fill="#6b7280">2026.04.25 · 3 评论</text>
+
+  <rect x="244" y="252" width="200" height="60" rx="10" fill="rgba(17,24,39,0.8)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+  <rect x="244" y="252" width="200" height="20" rx="10" fill="rgba(34,197,94,0.15)"/>
+  <text x="256" y="267" font-family="'Inter',system-ui,sans-serif" font-size="9" fill="#86efac">// PRODUCT</text>
+  <text x="256" y="285" font-family="'Inter',system-ui,sans-serif" font-size="10" font-weight="600" fill="#f0f4ff">短代码系统完整指南</text>
+  <text x="256" y="300" font-family="'Inter',system-ui,sans-serif" font-size="9" fill="#6b7280">2026.04.20 · 7 评论</text>
+
+  <rect x="458" y="252" width="200" height="60" rx="10" fill="rgba(17,24,39,0.8)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+  <rect x="458" y="252" width="200" height="20" rx="10" fill="rgba(192,132,252,0.15)"/>
+  <text x="470" y="267" font-family="'Inter',system-ui,sans-serif" font-size="9" fill="#c084fc">// AI</text>
+  <text x="470" y="285" font-family="'Inter',system-ui,sans-serif" font-size="10" font-weight="600" fill="#f0f4ff">Vditor 编辑器插件实现</text>
+  <text x="470" y="300" font-family="'Inter',system-ui,sans-serif" font-size="9" fill="#6b7280">2026.04.15 · 5 评论</text>
+
+  <rect x="672" y="244" width="218" height="72" rx="10" fill="rgba(17,24,39,0.9)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+  <rect x="672" y="244" width="218" height="24" rx="10" fill="rgba(37,99,235,0.2)"/>
+  <circle cx="696" cy="276" r="14" fill="rgba(37,99,235,0.3)" stroke="rgba(59,130,246,0.4)" stroke-width="1.5"/>
+  <text x="718" y="270" font-family="'Inter',system-ui,sans-serif" font-size="10" font-weight="700" fill="#f0f4ff">YTBlog Theme</text>
+  <text x="718" y="283" font-family="'Inter',system-ui,sans-serif" font-size="9" fill="#6b7280">现代 Typecho 博客主题</text>
+  <text x="692" y="306" font-family="'Inter',system-ui,sans-serif" font-size="9" fill="#9ca3af">42 文章</text>
+  <text x="745" y="306" font-family="'Inter',system-ui,sans-serif" font-size="9" fill="#9ca3af">8 分类</text>
+  <text x="795" y="306" font-family="'Inter',system-ui,sans-serif" font-size="9" fill="#9ca3af">128 评论</text>
+</svg>

@@ -1,0 +1,343 @@
+/* ============================================================
+   Light theme
+============================================================ */
+html[data-theme="light"] {
+  --bg: #f3f6fa;
+  --bg-soft: #ffffff;
+  --card: #ffffff;
+  --card-2: #f1f5f9;
+  --border: #e2e8f0;
+  --border-soft: rgba(15, 23, 42, 0.08);
+  --text: #334155;
+  --heading: #0f172a;
+  --body: #475569;
+  --muted: #64748b;
+  --muted-2: #94a3b8;
+  --card-bg: rgba(255, 255, 255, 0.82);
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --input-bg: #ffffff;
+  --body-grad-1: rgba(59, 130, 246, 0.08);
+  --body-grad-2: rgba(34, 197, 94, 0.05);
+  --shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme="light"] body {
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, var(--body-grad-1), transparent 34%),
+    radial-gradient(circle at top right, var(--body-grad-2), transparent 28%),
+    var(--bg);
+}
+
+html[data-theme="light"] .site-header {
+  background: var(--header-bg);
+  border-bottom-color: var(--border-soft);
+}
+
+html[data-theme="light"] .brand-text { color: var(--heading); }
+
+html[data-theme="light"] .site-nav > a:hover,
+html[data-theme="light"] .site-nav > a.is-active,
+html[data-theme="light"] .nav-link:hover { color: var(--heading); }
+
+html[data-theme="light"] .nav-dropdown {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: var(--border);
+}
+
+html[data-theme="light"] .nav-dropdown a:hover {
+  color: var(--heading);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+html[data-theme="light"] .search-box {
+  background: #f1f5f9;
+  border-color: var(--border);
+}
+html[data-theme="light"] .search-box input { color: var(--heading); }
+html[data-theme="light"] .search-box input::placeholder { color: var(--muted-2); }
+
+html[data-theme="light"] .kbd {
+  background: #fff;
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+html[data-theme="light"] button.kbd {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.22);
+  color: var(--blue-2);
+}
+
+html[data-theme="light"] button.kbd:hover {
+  background: var(--blue-2);
+  color: #fff;
+}
+
+html[data-theme="light"] .nav-toggle {
+  background: #f1f5f9;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+html[data-theme="light"] .hero-surface {
+  background:
+    radial-gradient(circle at 25% 20%, rgba(59, 130, 246, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(243, 246, 250, 0.35) 0%, rgba(243, 246, 250, 0.78) 55%, rgba(243, 246, 250, 0.92) 100%);
+}
+
+html[data-theme="light"] .hero-copy {
+  background: transparent;
+  border-color: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+  padding: 0;
+  color: var(--heading);
+}
+
+html[data-theme="light"] .hero-copy h1,
+html[data-theme="light"] .hero-copy h1 a { color: var(--heading); }
+html[data-theme="light"] .hero-copy p { color: var(--body); }
+
+html[data-theme="light"] .article-head-surface,
+html[data-theme="light"] .page-banner-surface {
+  background:
+    radial-gradient(circle at 25% 20%, rgba(59, 130, 246, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(243, 246, 250, 0.35) 0%, rgba(243, 246, 250, 0.78) 55%, rgba(243, 246, 250, 0.92) 100%);
+}
+
+html[data-theme="light"] .article-head .article-meta {
+  color: var(--muted);
+}
+
+html[data-theme="light"] .article-head .article-meta > span::after {
+  color: var(--border);
+}
+
+html[data-theme="light"] .page-banner-inner p {
+  color: var(--body);
+}
+
+html[data-theme="light"] .article-head .eyebrow,
+html[data-theme="light"] .page-banner-inner .eyebrow {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--blue-2);
+  border-color: rgba(59, 130, 246, 0.22);
+}
+
+html[data-theme="light"] .article-summary { color: var(--muted); }
+
+html[data-theme="light"] .post-card,
+html[data-theme="light"] .side-card,
+html[data-theme="light"] .featured-card,
+html[data-theme="light"] .neighbor-card,
+html[data-theme="light"] .empty-panel,
+html[data-theme="light"] .comment-form-panel,
+html[data-theme="light"] .article-toc-panel,
+html[data-theme="light"] .article-info,
+html[data-theme="light"] .comment-list .comment-body {
+  background: var(--card-bg);
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+
+html[data-theme="light"] .post-card h3,
+html[data-theme="light"] .list-item h3,
+html[data-theme="light"] .side-card h3,
+html[data-theme="light"] .featured-card h3,
+html[data-theme="light"] .section-heading h2,
+html[data-theme="light"] .article-toc-panel h3,
+html[data-theme="light"] .article-info h3,
+html[data-theme="light"] .empty-panel h3,
+html[data-theme="light"] .comment-form-panel h3,
+html[data-theme="light"] .neighbor-card a { color: var(--heading); }
+
+html[data-theme="light"] .post-card p,
+html[data-theme="light"] .post-card-body p,
+html[data-theme="light"] .list-item p,
+html[data-theme="light"] .featured-card p,
+html[data-theme="light"] .empty-panel p,
+html[data-theme="light"] .side-card p,
+html[data-theme="light"] .side-comments .sc-text,
+html[data-theme="light"] .section-heading p,
+html[data-theme="light"] .form-note,
+html[data-theme="light"] .comment-section p { color: var(--body); }
+
+html[data-theme="light"] .post-card:hover,
+html[data-theme="light"] .list-item:hover,
+html[data-theme="light"] .featured-card:hover,
+html[data-theme="light"] .neighbor-card:hover { border-color: rgba(59, 130, 246, 0.5); }
+
+html[data-theme="light"] .list-item:hover {
+  background: rgba(59, 130, 246, 0.05);
+  border-bottom-color: rgba(59, 130, 246, 0.35);
+}
+
+html[data-theme="light"] .post-card-media {
+  background: linear-gradient(135deg, rgba(59, 130, 246, .2), rgba(34, 197, 94, .08)), #e2e8f0;
+}
+
+html[data-theme="light"] .article-content p,
+html[data-theme="light"] .article-content ul,
+html[data-theme="light"] .article-content ol { color: var(--body); }
+
+html[data-theme="light"] .article-content h1,
+html[data-theme="light"] .article-content h2,
+html[data-theme="light"] .article-content h3,
+html[data-theme="light"] .article-content h4,
+html[data-theme="light"] .article-content h5,
+html[data-theme="light"] .article-content h6 { color: var(--heading); }
+
+html[data-theme="light"] .article-content blockquote {
+  background: rgba(59, 130, 246, 0.06);
+  color: var(--body);
+}
+
+html[data-theme="light"] .article-content code {
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--blue-2);
+  border-color: rgba(59, 130, 246, 0.18);
+}
+
+html[data-theme="light"] .article-content th {
+  background: var(--card-2);
+  color: var(--heading);
+}
+
+html[data-theme="light"] .article-content td { color: var(--body); }
+html[data-theme="light"] .article-content table { border-color: var(--border); }
+html[data-theme="light"] .article-content th,
+html[data-theme="light"] .article-content td { border-bottom-color: var(--border); }
+
+html[data-theme="light"] .article-content img { border-color: var(--border); }
+
+html[data-theme="light"] .side-list a { color: var(--muted); }
+html[data-theme="light"] .side-list a strong { color: var(--text); }
+html[data-theme="light"] .side-list a:hover,
+html[data-theme="light"] .side-list a:hover strong { color: var(--heading); }
+html[data-theme="light"] .side-list a span { color: var(--muted-2); }
+
+html[data-theme="light"] .side-comments .sc-author { color: var(--blue-2); }
+html[data-theme="light"] .side-comments .sc-meta,
+html[data-theme="light"] .side-comments .sc-on,
+html[data-theme="light"] .side-comments .sc-on a { color: var(--muted-2); }
+html[data-theme="light"] .side-comments .sc-on a:hover { color: var(--blue-2); }
+
+html[data-theme="light"] .tag,
+html[data-theme="light"] .tags-list a,
+html[data-theme="light"] .tags-list span,
+html[data-theme="light"] .article-tags a,
+html[data-theme="light"] .card-badge,
+html[data-theme="light"] .eyebrow,
+html[data-theme="light"] .section-tag {
+  color: var(--blue-2);
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.18);
+}
+
+html[data-theme="light"] .chip {
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+html[data-theme="light"] .chip:hover,
+html[data-theme="light"] .chip.is-active {
+  color: #fff;
+  background: var(--blue-2);
+  border-color: var(--blue-2);
+}
+
+html[data-theme="light"] .filter-select {
+  background: #fff;
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+html[data-theme="light"] .filter-bar { border-top-color: var(--border); }
+
+html[data-theme="light"] .list-wrap,
+html[data-theme="light"] .list-item { border-color: var(--border); }
+
+html[data-theme="light"] .button-secondary {
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--heading);
+  border-color: var(--border);
+}
+
+html[data-theme="light"] .page-navigator li a,
+html[data-theme="light"] .page-navigator li span {
+  background: #ffffff;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+html[data-theme="light"] .article-content {
+  background: var(--card-bg);
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+
+html[data-theme="light"] .article-content pre {
+  background: #f6f8fa;
+  border-color: #d1d9e0;
+  color: #24292f;
+}
+
+html[data-theme="light"] .article-content pre code {
+  color: #24292f;
+}
+
+html[data-theme="light"] .article-content pre .code-bar {
+  background: linear-gradient(180deg, #eaeef2, #dde2ea);
+  border-bottom-color: #d1d9e0;
+}
+
+html[data-theme="light"] .article-content pre .code-lang {
+  color: #57606a;
+}
+
+html[data-theme="light"] .article-content pre .code-copy {
+  color: #57606a;
+  border-color: #c8d0d9;
+}
+
+html[data-theme="light"] .article-content pre .code-copy:hover {
+  color: var(--blue-2);
+  border-color: var(--blue-2);
+}
+
+html[data-theme="light"] .page-navigator .current span,
+html[data-theme="light"] .page-navigator .current a,
+html[data-theme="light"] .page-navigator a:hover {
+  background: var(--blue-2);
+  color: #fff;
+  border-color: var(--blue-2);
+}
+
+html[data-theme="light"] .comment-form input,
+html[data-theme="light"] .comment-form textarea,
+html[data-theme="light"] .subscribe input {
+  background: #ffffff;
+  color: var(--heading);
+  border-color: var(--border);
+}
+
+html[data-theme="light"] .comment-list .comment-author { color: var(--heading); }
+html[data-theme="light"] .comment-list .comment-content { color: var(--body); }
+html[data-theme="light"] .comment-list .comment-meta { color: var(--muted-2); }
+
+html[data-theme="light"] .meta-label,
+html[data-theme="light"] .card-meta,
+html[data-theme="light"] .card-meta-right,
+html[data-theme="light"] .article-meta { color: var(--muted-2); }
+
+html[data-theme="light"] .footer-inner {
+  color: var(--muted-2);
+  border-top-color: var(--border);
+}
+
+html[data-theme="light"] .footer-title { color: var(--heading); }
+
+/* Terminal stats card stays dark in both themes */
+

@@ -1,0 +1,91 @@
+/* ===== 内容加密(Lock) ===== */
+/* [login] / [reply] 占位块 */
+.fx-hidden {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(147,197,253,0.04));
+  border: 1px dashed rgba(147,197,253,0.35);
+  border-radius: 10px;
+  color: var(--text-soft, #9fb2cf);
+  font-size: 14px;
+}
+[data-theme="light"] .fx-hidden {
+  background: linear-gradient(135deg, rgba(37,99,235,0.06), rgba(37,99,235,0.02));
+  border-color: rgba(37,99,235,0.25);
+  color: #4b5563;
+}
+.fx-hidden-icon { font-size: 18px; line-height: 1; }
+.fx-hidden-text { flex: 1; }
+.fx-hidden--login { border-style: solid; border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.06); }
+.fx-hidden--reply { border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.05); }
+
+/* 列表中被加密分类遮蔽的卡片 */
+.post-card--locked .post-card-media { filter: grayscale(0.55) brightness(0.7); }
+.post-card--locked .post-card-media::after {
+  content: "🔒";
+  position: absolute;
+  top: 10px; right: 12px;
+  font-size: 18px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  z-index: 2;
+}
+.post-card--locked .post-card-body h3 a { color: var(--text-soft, #94a3b8); }
+
+/* 单篇文章的内嵌密码表单(原生 protectPassword) */
+.fx-lock-inline {
+  margin: 30px 0;
+  padding: 28px 24px;
+  border: 1px solid rgba(147,197,253,0.2);
+  border-radius: 12px;
+  background: rgba(37,99,235,0.04);
+  text-align: center;
+}
+[data-theme="light"] .fx-lock-inline {
+  background: rgba(37,99,235,0.03);
+  border-color: rgba(37,99,235,0.15);
+}
+.fx-lock-inline-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text, #e5eaf3); }
+.fx-lock-inline-tip { color: var(--text-soft, #94a3b8); margin: 0 0 18px; font-size: 14px; }
+.fx-lock-inline .fx-lock-form { display: flex; gap: 10px; max-width: 420px; margin: 0 auto; }
+.fx-lock-inline .fx-lock-form input[type="password"] {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid rgba(147,197,253,0.3);
+  border-radius: 8px;
+  background: rgba(7,12,24,0.5);
+  color: var(--text, #e5eaf3);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+[data-theme="light"] .fx-lock-inline .fx-lock-form input[type="password"] {
+  background: #fff;
+  color: #1f2937;
+  border-color: #e5e7eb;
+}
+.fx-lock-inline .fx-lock-form input[type="password"]:focus {
+  border-color: var(--blue, #2563eb);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+.fx-lock-inline .fx-lock-form button {
+  padding: 0 22px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+.fx-lock-inline .fx-lock-form button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(37,99,235,0.35);
+}
