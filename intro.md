@@ -1,10 +1,3 @@
----
-title: YTBlog Theme + FluxgridEditor —— 一套现代化的 Typecho 写作组合
-date: 2026-04-25
-categories: 工具
-tags: Typecho, 主题, 插件
----
-
 [scode type="share"]
 **TL;DR** —— [tag type="primary"]YTBlog Theme[/tag] 是一款互联网科技风的 Typecho 主题，[tag type="success"]FluxgridEditor[/tag] 是它的官方配套写作插件。两者一起使用时，可以得到一个粒子背景 + 代码窗口 Hero 的现代化博客 + Vditor 三模式 Markdown 编辑器 + 兰空图床 / S3 直传的完整方案。
 [/scode]

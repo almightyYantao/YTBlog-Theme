@@ -670,6 +670,8 @@
     var articleLinks = document.querySelectorAll('.article-content a[href]');
     articleLinks.forEach(function (link) {
       if (link.dataset.fxExt === '1') { return; }
+      // GLightbox 给图片包了一层 <a> 指向图床域名,不能当外链拦截,否则点图就弹跳转提示
+      if (link.classList.contains('glightbox')) { return; }
       var href = link.getAttribute('href');
       if (!href || href.charAt(0) === '#' || /^(?:javascript|mailto|tel):/i.test(href)) { return; }
 
