@@ -3,6 +3,22 @@
   var pageCleanups = [];
   var currentLightbox = null;
 
+  // 平台检测:Mac 上把 .search-hint-mac (⌘) 显示出来,其他平台显示 Ctrl
+  var isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent || '');
+  if (isMac) { document.documentElement.classList.add('is-mac'); }
+
+  // 全局 ⌘K / Ctrl+K → 聚焦搜索框 (一次性绑定,不需 PJAX 重置)
+  document.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+      var input = document.getElementById('site-search-input');
+      if (input) {
+        e.preventDefault();
+        input.focus();
+        input.select();
+      }
+    }
+  });
+
   var runPageCleanups = function () {
     pageCleanups.forEach(function (fn) {
       try { fn(); } catch (e) {}
@@ -291,7 +307,15 @@
     var toc = document.querySelector('[data-article-toc]');
     if (!articleContent || !tocWrap || !toc) { return; }
 
-    var headings = articleContent.querySelectorAll('h2, h3, h4');
+    // 排除短代码内部的标题(如 [timeline] 渲染的 h4.sc-timeline-title,
+    // [collapse]、[tabs]、[scode] 等内部的 hN),否则 TOC 会塞进不属于
+    // 文章正文骨架的项,scroll-spy 也会因为这些节点的 offsetTop 不规律错乱。
+    var allHeadings = articleContent.querySelectorAll('h2, h3, h4');
+    var shortcodeContainerSelector =
+      '.sc-timeline, .sc-collapse, .sc-tabs, .sc-callout, .sc-column, .sc-block, .sc-tab-panel';
+    var headings = Array.prototype.filter.call(allHeadings, function (h) {
+      return !h.closest(shortcodeContainerSelector);
+    });
     if (!headings.length) { return; }
 
     var slugify = function (text) {
@@ -731,6 +755,363 @@
     pageCleanups.push(function () { observer.disconnect(); });
   };
 
+  // ==================== 评论 emoji 选择器 ====================
+
+  // wide=true → 宽度可变,渲染为可换行的横向 chip(适合长文本如颜文字)
+  // 默认窄列网格(适合单字符 emoji)
+  var EMOJI_GROUPS = [
+    { name: '常用',  list: ['😀','😂','😅','😍','🥰','😘','😎','🤔','😏','😴','😭','😡','🥳','🤩','😇','🤗','🙄','😋','🤤','😬','🤯','🥺','😱','🫠','🫡','🤝'] },
+    { name: '手势',  list: ['👍','👎','👏','🙌','🙏','💪','✌️','👌','🤙','🤘','✋','👋','🤚','🤞','🫶','💅'] },
+    { name: '心情',  list: ['❤️','💔','💕','💖','💯','🔥','✨','⭐','🌟','💫','🎉','🎊','🥂','☕','🍻','🍰'] },
+    { name: '动物',  list: ['🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧'] },
+    { name: '物品',  list: ['💻','📱','⌨️','🖥️','💾','📷','🎧','🎮','📚','✏️','📝','📌','📎','💡','🔧','🚀'] },
+    { name: '颜文字', wide: true, list: [
+      '(´∀｀)', '(°▽°)', '(✿◠‿◠)', '(◕‿◕)', '(•‿•)', '(￣▽￣)',
+      '(￣ω￣)', '(´；ω；`)', '(╥﹏╥)', '(ㅠ_ㅠ)', '(；・∀・)', '(¬_¬")',
+      '(ಠ_ಠ)', '(￣へ￣)', '(；￣Д￣)', '(￣□￣;)', '(°ロ°)', '(•_•)',
+      '(´◔౪◔)', '(´∀｀*)', '(✪ω✪)', '(★ω★)', '(灬º‿º灬)♡', '(っ˘ω˘ς)',
+      '(*≧ω≦)', '(´｡• ω •｡`)', '(*/ω＼*)', '＼(^o^)／', 'ヽ(✿ﾟ▽ﾟ)ノ', '(งΦ_Φ)ง',
+      'ʕ•ᴥ•ʔ', '(=^･ω･^=)', '(=^‥^=)', '٩(◕‿◕)۶', '٩(ˊᗜˋ*)و', 'ヾ(≧▽≦*)o',
+      '(っ°Д°；)っ', '(ノಠ益ಠ)ノ彡', '(╯°□°）╯︵┻━┻', '┬─┬ノ(゜-゜ノ)', '¯\\_(ツ)_/¯', '( ͡° ͜ʖ ͡°)',
+    ]},
+  ];
+
+  var initCommentEmojiPicker = function () {
+    var toggle = document.querySelector('[data-emoji-toggle]');
+    var panel  = document.querySelector('[data-emoji-panel]');
+    var area   = document.querySelector('[data-comment-text]');
+    if (!toggle || !panel || !area) { return; }
+    if (panel.dataset.fxEmojiInit === '1') { return; }
+    panel.dataset.fxEmojiInit = '1';
+
+    var insertAtCursor = function (text) {
+      var start = area.selectionStart, end = area.selectionEnd;
+      var before = area.value.substring(0, start);
+      var after  = area.value.substring(end);
+      area.value = before + text + after;
+      area.focus();
+      var pos = start + text.length;
+      area.setSelectionRange(pos, pos);
+    };
+
+    EMOJI_GROUPS.forEach(function (g) {
+      var h = document.createElement('div');
+      h.className = 'comment-emoji-group-title';
+      h.textContent = g.name;
+      panel.appendChild(h);
+
+      // 长文本(颜文字)用可换行 chip 流式布局, 单字符 emoji 用固定列网格
+      var grid = document.createElement('div');
+      grid.className = g.wide ? 'comment-emoji-flow' : 'comment-emoji-grid';
+
+      g.list.forEach(function (s) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = s;
+        b.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          insertAtCursor(s);
+        });
+        grid.appendChild(b);
+      });
+      panel.appendChild(grid);
+    });
+
+    var open = function () {
+      panel.hidden = false;
+      setTimeout(function () {
+        document.addEventListener('click', onDoc, true);
+        document.addEventListener('keydown', onEsc, true);
+      }, 0);
+    };
+    var close = function () {
+      panel.hidden = true;
+      document.removeEventListener('click', onDoc, true);
+      document.removeEventListener('keydown', onEsc, true);
+    };
+    var onDoc = function (e) {
+      if (panel.contains(e.target) || toggle.contains(e.target)) { return; }
+      close();
+    };
+    var onEsc = function (e) { if (e.key === 'Escape') { close(); } };
+
+    toggle.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (panel.hidden) { open(); } else { close(); }
+    });
+
+    pageCleanups.push(close);
+  };
+
+  // ==================== 站点统计 modal (ECharts 懒加载) ====================
+
+  var ECHARTS_CDN = 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js';
+  var echartsLoadingPromise = null;
+  var statsCharts = [];
+  var statsKeyHandler = null;
+
+  var loadECharts = function () {
+    if (window.echarts) { return Promise.resolve(window.echarts); }
+    if (echartsLoadingPromise) { return echartsLoadingPromise; }
+    echartsLoadingPromise = new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = ECHARTS_CDN;
+      s.async = true;
+      s.onload  = function () { resolve(window.echarts); };
+      s.onerror = function () { echartsLoadingPromise = null; reject(new Error('ECharts 加载失败')); };
+      document.head.appendChild(s);
+    });
+    return echartsLoadingPromise;
+  };
+
+  var statsTheme = function () {
+    return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  };
+
+  var statsTextColor = function () {
+    return statsTheme() === 'light' ? '#475569' : '#cbd5e1';
+  };
+  var statsAxisColor = function () {
+    return statsTheme() === 'light' ? '#cbd5e1' : '#334155';
+  };
+
+  var renderStatsCharts = function (echarts, data) {
+    statsCharts.forEach(function (c) { try { c.dispose(); } catch (e) {} });
+    statsCharts = [];
+
+    var textColor = statsTextColor();
+    var axisColor = statsAxisColor();
+    var palette = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4', '#ec4899', '#10b981', '#f97316', '#6366f1'];
+
+    var commonGrid = {
+      left: 50, right: 16, top: 24, bottom: 30, containLabel: true
+    };
+
+    // ── 1) 动态日历热力图 ────────────────────────────────────
+    if (data.heatmap && data.heatmap.length) {
+      var max = 0;
+      data.heatmap.forEach(function (e) { if (e[1] > max) max = e[1]; });
+      var heatEl = document.getElementById('stats-chart-heatmap');
+      if (heatEl) {
+        var heatChart = echarts.init(heatEl, null, { renderer: 'canvas' });
+        heatChart.setOption({
+          tooltip: {
+            formatter: function (p) {
+              return p.value[0] + '<br>📝 文章 ' + (p.value[2] || 0) + ' · 💬 评论 ' + (p.value[3] || 0);
+            }
+          },
+          visualMap: {
+            min: 0, max: Math.max(max, 1),
+            type: 'continuous',
+            orient: 'horizontal',
+            left: 'center',
+            bottom: 0,
+            inRange: { color: ['#0f172a22', '#3b82f6', '#22c55e'] },
+            textStyle: { color: textColor },
+            itemWidth: 12, itemHeight: 80
+          },
+          calendar: {
+            range: [data.startDate, data.endDate],
+            cellSize: ['auto', 16],
+            top: 18, left: 30, right: 30,
+            splitLine: { show: false },
+            itemStyle: { borderWidth: 2, borderColor: 'transparent', color: statsTheme() === 'light' ? '#f1f5f9' : '#1e293b' },
+            yearLabel: { show: false },
+            monthLabel: { color: textColor, fontSize: 11 },
+            dayLabel: { color: textColor, fontSize: 10, firstDay: 1, nameMap: ['日','一','二','三','四','五','六'] }
+          },
+          series: [{
+            type: 'heatmap',
+            coordinateSystem: 'calendar',
+            data: data.heatmap.map(function (e) { return [e[0], e[1], e[2], e[3]]; })
+          }]
+        });
+        statsCharts.push(heatChart);
+      }
+    }
+
+    // ── 2) 分类雷达图 ───────────────────────────────────────
+    if (data.categories && data.categories.length) {
+      var radarEl = document.getElementById('stats-chart-radar');
+      if (radarEl) {
+        var topCats = data.categories.slice(0, 6);
+        var radarMax = 0;
+        topCats.forEach(function (c) { if (c.count > radarMax) radarMax = c.count; });
+        var radarChart = echarts.init(radarEl);
+        radarChart.setOption({
+          tooltip: {},
+          radar: {
+            indicator: topCats.map(function (c) { return { name: c.name, max: Math.ceil(radarMax * 1.2) }; }),
+            axisName: { color: textColor, fontSize: 11 },
+            splitLine: { lineStyle: { color: axisColor } },
+            splitArea: { show: false },
+            axisLine: { lineStyle: { color: axisColor } }
+          },
+          series: [{
+            type: 'radar',
+            data: [{
+              value: topCats.map(function (c) { return c.count; }),
+              name: '文章数',
+              areaStyle: { color: 'rgba(59, 130, 246, 0.28)' },
+              lineStyle: { color: '#3b82f6', width: 2 },
+              itemStyle: { color: '#3b82f6' }
+            }]
+          }]
+        });
+        statsCharts.push(radarChart);
+      }
+    }
+
+    // ── 3) 月度发布柱图 ─────────────────────────────────────
+    if (data.monthly && data.monthly.length) {
+      var monEl = document.getElementById('stats-chart-monthly');
+      if (monEl) {
+        var monChart = echarts.init(monEl);
+        monChart.setOption({
+          tooltip: { trigger: 'axis' },
+          legend: { textStyle: { color: textColor }, top: 0, right: 8 },
+          grid: commonGrid,
+          xAxis: {
+            type: 'category',
+            data: data.monthly.map(function (m) { return m.month; }),
+            axisLine: { lineStyle: { color: axisColor } },
+            axisLabel: { color: textColor, fontSize: 11 }
+          },
+          yAxis: {
+            type: 'value',
+            axisLine: { show: false },
+            axisLabel: { color: textColor },
+            splitLine: { lineStyle: { color: axisColor, type: 'dashed' } }
+          },
+          series: [
+            { name: '文章', type: 'bar', barMaxWidth: 22, itemStyle: { color: '#3b82f6', borderRadius: [4,4,0,0] }, data: data.monthly.map(function (m) { return m.posts; }) },
+            { name: '评论', type: 'bar', barMaxWidth: 22, itemStyle: { color: '#22c55e', borderRadius: [4,4,0,0] }, data: data.monthly.map(function (m) { return m.comments; }) }
+          ]
+        });
+        statsCharts.push(monChart);
+      }
+    }
+
+    // ── 4) 分类饼图 ─────────────────────────────────────────
+    if (data.categories && data.categories.length) {
+      var pieEl = document.getElementById('stats-chart-categories');
+      if (pieEl) {
+        var pieChart = echarts.init(pieEl);
+        pieChart.setOption({
+          tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+          legend: { orient: 'vertical', right: 8, top: 'middle', textStyle: { color: textColor, fontSize: 11 } },
+          color: palette,
+          series: [{
+            type: 'pie',
+            radius: ['42%', '68%'],
+            center: ['38%', '50%'],
+            avoidLabelOverlap: true,
+            itemStyle: { borderRadius: 4, borderColor: statsTheme() === 'light' ? '#fff' : '#0f172a', borderWidth: 2 },
+            label: { show: false },
+            labelLine: { show: false },
+            data: data.categories.map(function (c) { return { name: c.name, value: c.count }; })
+          }]
+        });
+        statsCharts.push(pieChart);
+      }
+    }
+
+    // ── 5) 标签 TOP 20 横向柱图 ───────────────────────────────
+    if (data.tags && data.tags.length) {
+      var tagEl = document.getElementById('stats-chart-tags');
+      if (tagEl) {
+        var tagChart = echarts.init(tagEl);
+        var tagData = data.tags.slice().reverse(); // ECharts 横向 bar 倒序更直观
+        tagChart.setOption({
+          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+          grid: { left: 70, right: 24, top: 8, bottom: 24, containLabel: true },
+          xAxis: {
+            type: 'value',
+            axisLine: { show: false },
+            axisLabel: { color: textColor },
+            splitLine: { lineStyle: { color: axisColor, type: 'dashed' } }
+          },
+          yAxis: {
+            type: 'category',
+            data: tagData.map(function (t) { return t.name; }),
+            axisLine: { lineStyle: { color: axisColor } },
+            axisLabel: { color: textColor, fontSize: 11 }
+          },
+          series: [{
+            type: 'bar',
+            barMaxWidth: 14,
+            itemStyle: {
+              color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0,
+                colorStops: [{ offset: 0, color: '#3b82f6' }, { offset: 1, color: '#22c55e' }] },
+              borderRadius: [0, 4, 4, 0]
+            },
+            data: tagData.map(function (t) { return t.count; })
+          }]
+        });
+        statsCharts.push(tagChart);
+      }
+    }
+  };
+
+  var resizeStatsCharts = function () {
+    statsCharts.forEach(function (c) { try { c.resize(); } catch (e) {} });
+  };
+
+  var initStatsModal = function () {
+    var toggle = document.getElementById('stats-toggle');
+    var modal  = document.getElementById('stats-modal');
+    if (!toggle || !modal || toggle.dataset.fxStatsInit === '1') { return; }
+    toggle.dataset.fxStatsInit = '1';
+
+    var openStats = function () {
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      var data = window.fluxgridStats || {};
+      loadECharts().then(function (echarts) {
+        // 等 modal 完成 layout 后再 init,这样宽高读取正确
+        requestAnimationFrame(function () {
+          renderStatsCharts(echarts, data);
+        });
+      }).catch(function (err) {
+        console.error(err);
+        var body = modal.querySelector('.stats-modal-body');
+        if (body) {
+          body.innerHTML = '<div class="stats-empty">图表库加载失败：' + err.message + '</div>';
+        }
+      });
+      statsKeyHandler = function (e) { if (e.key === 'Escape') { closeStats(); } };
+      document.addEventListener('keydown', statsKeyHandler, true);
+      window.addEventListener('resize', resizeStatsCharts);
+    };
+    var closeStats = function () {
+      modal.hidden = true;
+      document.body.style.overflow = '';
+      if (statsKeyHandler) {
+        document.removeEventListener('keydown', statsKeyHandler, true);
+        statsKeyHandler = null;
+      }
+      window.removeEventListener('resize', resizeStatsCharts);
+    };
+
+    toggle.addEventListener('click', openStats);
+    modal.querySelectorAll('[data-stats-close]').forEach(function (el) {
+      el.addEventListener('click', closeStats);
+    });
+
+    // 主题切换时重渲染
+    var themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', function () {
+        if (modal.hidden) { return; }
+        setTimeout(function () {
+          if (window.echarts && window.fluxgridStats) {
+            renderStatsCharts(window.echarts, window.fluxgridStats);
+          }
+        }, 60);
+      });
+    }
+  };
+
   var initPageContent = function () {
     runPageCleanups();
     syncNavActive();
@@ -742,6 +1123,8 @@
     initExternalLinkRedirect();
     fitArticleTitle();
     initRevealOnScroll();
+    initCommentEmojiPicker();
+    initStatsModal();
   };
 
   // ==================== PJAX (AJAX navigation) ====================

@@ -525,3 +525,49 @@ html[data-theme="light"] .link-redirect-url {
   transition: transform .18s ease;
 }
 .article-content a.is-external:hover::after { transform: translate(2px, -2px); color: var(--blue); }
+
+/* ── APlayer (MortyFx APlayer-Typecho-Plugin) 主题适配 ──
+   APlayer 默认浅色卡片在暗色主题下会撞色,这里只针对文章里渲染的 .aplayer 实例覆盖 */
+.article-content .aplayer {
+  margin: 18px 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card-2) !important;
+  color: var(--body) !important;
+  overflow: hidden;
+  box-shadow: none;
+}
+.article-content .aplayer .aplayer-info { background: transparent !important; border-color: var(--border-soft) !important; }
+.article-content .aplayer .aplayer-title { color: var(--heading) !important; }
+.article-content .aplayer .aplayer-author,
+.article-content .aplayer .aplayer-time { color: var(--muted) !important; }
+.article-content .aplayer .aplayer-list { background: transparent !important; }
+.article-content .aplayer .aplayer-list ol { padding: 0 !important; margin: 0 !important; list-style: none !important; }
+.article-content .aplayer .aplayer-list li {
+  border-top: 1px solid var(--border-soft) !important;
+  background: transparent !important;
+}
+.article-content .aplayer .aplayer-list li:hover,
+.article-content .aplayer .aplayer-list li.aplayer-list-light {
+  background: rgba(59, 130, 246, 0.10) !important;
+}
+.article-content .aplayer .aplayer-list li .aplayer-list-title { color: var(--body) !important; }
+.article-content .aplayer .aplayer-list li .aplayer-list-author { color: var(--muted-2) !important; }
+.article-content .aplayer .aplayer-lrc { background: transparent !important; }
+.article-content .aplayer .aplayer-lrc p { color: var(--muted) !important; }
+.article-content .aplayer .aplayer-lrc p.aplayer-lrc-current { color: var(--blue-light) !important; }
+
+/* 浅色主题:用 APlayer 接近原色,只改边框/hover */
+html[data-theme="light"] .article-content .aplayer {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+html[data-theme="light"] .article-content .aplayer .aplayer-title { color: #111827 !important; }
+html[data-theme="light"] .article-content .aplayer .aplayer-author,
+html[data-theme="light"] .article-content .aplayer .aplayer-time { color: #6b7280 !important; }
+html[data-theme="light"] .article-content .aplayer .aplayer-list li:hover,
+html[data-theme="light"] .article-content .aplayer .aplayer-list li.aplayer-list-light {
+  background: #eff6ff !important;
+}
+html[data-theme="light"] .article-content .aplayer .aplayer-lrc p { color: #6b7280 !important; }
+html[data-theme="light"] .article-content .aplayer .aplayer-lrc p.aplayer-lrc-current { color: var(--blue-2) !important; }

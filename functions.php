@@ -158,46 +158,113 @@ function fluxgrid_resolve_options($context = null)
     return null;
 }
 
-function fluxgrid_sticky_count($context = null)
+/**
+ * 提取置顶文章的 cid 列表,顺序保留.
+ * 数据来源 (按优先级):
+ *   1. 主题设置里手填的「置顶文章 cid」列表 (stickyCids,主题自管,顺序就是渲染顺序)
+ *   2. 文章自定义字段 pinned=on (themeFields 在文章编辑页勾选,追加到末尾)
+ *   3. Typecho 1.2+ 原生 stickyPosts (向后兼容)
+ *   4. Sticky 插件 (向后兼容)
+ * 返回 array<int>,空列表表示没有置顶文章.
+ */
+function fluxgrid_sticky_cids($context = null)
 {
     $options = fluxgrid_resolve_options($context);
-    if (!is_object($options) || !method_exists($options, 'plugin')) {
-        return 0;
+    if (!is_object($options)) {
+        return array();
     }
 
-    $stickyOptions = null;
-    foreach (array('Sticky', 'sticky') as $pluginName) {
-        $candidate = $options->plugin($pluginName);
-        if (is_object($candidate)) {
-            $stickyOptions = $candidate;
-            break;
-        }
-    }
+    $cids = array();
 
-    if (!is_object($stickyOptions)) {
-        return 0;
-    }
-
-    $stickyCids = '';
-    foreach (array('cid', 'cids', 'sticky', 'stickyIds', 'stickyCid', 'stickyCids') as $field) {
-        if (isset($stickyOptions->$field)) {
-            $stickyCids = fluxgrid_string_value($stickyOptions->$field);
-            if ($stickyCids !== '') {
-                break;
+    // (1) 主题设置 — 手填 cid 列表 (顺序优先级最高)
+    if (isset($options->stickyCids)) {
+        $value = fluxgrid_string_value($options->stickyCids);
+        if ($value !== '') {
+            foreach (preg_split('/[\s,\|]+/', $value) as $item) {
+                if (ctype_digit((string) $item) && (int) $item > 0) {
+                    $cid = (int) $item;
+                    if (!in_array($cid, $cids, true)) { $cids[] = $cid; }
+                }
             }
         }
     }
 
-    if ($stickyCids === '') {
-        return 0;
+    // (2) 文章自定义字段 pinned=on (themeFields 复选框)
+    try {
+        if (class_exists('Typecho_Db')) {
+            $db = Typecho_Db::get();
+            $rows = $db->fetchAll(
+                $db->select('cid')
+                    ->from('table.fields')
+                    ->where('name = ?', 'pinned')
+                    ->where('str_value = ?', 'on')
+                    ->order('cid', Typecho_Db::SORT_DESC)
+            );
+            foreach ($rows as $row) {
+                $cid = (int) $row['cid'];
+                if ($cid > 0 && !in_array($cid, $cids, true)) {
+                    $cids[] = $cid;
+                }
+            }
+        }
+    } catch (Exception $e) {
+        // table.fields 查询失败 (空表 / 权限),忽略
     }
 
-    $items = preg_split('/[\s,\|]+/', $stickyCids);
-    $items = array_filter($items, function ($item) {
-        return $item !== '' && ctype_digit((string) $item);
-    });
+    // (3) Typecho 1.2+ 原生 stickyPosts (向后兼容)
+    foreach (array('stickyPosts', 'attachingPosts') as $field) {
+        if (isset($options->$field)) {
+            $value = fluxgrid_string_value($options->$field);
+            if ($value !== '') {
+                foreach (preg_split('/[\s,\|]+/', $value) as $item) {
+                    if (ctype_digit((string) $item) && (int) $item > 0) {
+                        $cid = (int) $item;
+                        if (!in_array($cid, $cids, true)) { $cids[] = $cid; }
+                    }
+                }
+            }
+        }
+    }
 
-    return count($items);
+    // (4) Sticky 插件 (老版本兼容)
+    if (method_exists($options, 'plugin')) {
+        $stickyOptions = null;
+        foreach (array('Sticky', 'sticky') as $pluginName) {
+            try {
+                $candidate = $options->plugin($pluginName);
+                if (is_object($candidate)) {
+                    $stickyOptions = $candidate;
+                    break;
+                }
+            } catch (Exception $e) {
+                // 插件未启用,忽略
+            }
+        }
+        if (is_object($stickyOptions)) {
+            $stickyCids = '';
+            foreach (array('cid', 'cids', 'sticky', 'stickyIds', 'stickyCid', 'stickyCids') as $field) {
+                if (isset($stickyOptions->$field)) {
+                    $stickyCids = fluxgrid_string_value($stickyOptions->$field);
+                    if ($stickyCids !== '') { break; }
+                }
+            }
+            if ($stickyCids !== '') {
+                foreach (preg_split('/[\s,\|]+/', $stickyCids) as $item) {
+                    if (ctype_digit((string) $item) && (int) $item > 0) {
+                        $cid = (int) $item;
+                        if (!in_array($cid, $cids, true)) { $cids[] = $cid; }
+                    }
+                }
+            }
+        }
+    }
+
+    return $cids;
+}
+
+function fluxgrid_sticky_count($context = null)
+{
+    return count(fluxgrid_sticky_cids($context));
 }
 
 function fluxgrid_normalize_url_like_value($value)
@@ -464,9 +531,12 @@ function fluxgrid_first_image($content)
 
 function fluxgrid_post_image($archive)
 {
-    $cover = fluxgrid_sanitize_image_source(fluxgrid_post_field($archive, 'cover'));
-    if ($cover !== '') {
-        return $cover;
+    // 优先级:自定义字段 banner (历史名) → cover (新名) → 文章首图 → (调用方再回退随机图)
+    foreach (array('banner', 'cover') as $fname) {
+        $value = fluxgrid_sanitize_image_source(fluxgrid_post_field($archive, $fname));
+        if ($value !== '') {
+            return $value;
+        }
     }
 
     $firstImage = fluxgrid_first_image(fluxgrid_post_text($archive));
@@ -617,16 +687,36 @@ input[id^="__fg_"] {
   margin-left: 5px; font-family: monospace; font-weight: normal; vertical-align: middle;
 }
 
-/* Section headings */
+/* Section headings (可点击折叠) */
 .fg-sec {
   display: flex; align-items: center; gap: 8px;
   font-size: 13px; font-weight: 600; color: #1d4ed8;
-  padding: 6px 10px; margin: 0;
+  padding: 8px 10px; margin: 0;
   border-left: 3px solid #2563eb;
   background: linear-gradient(90deg, rgba(37,99,235,.08) 0%, transparent 100%);
   border-radius: 0 6px 6px 0;
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s ease;
+}
+.fg-sec:hover {
+  background: linear-gradient(90deg, rgba(37,99,235,.18) 0%, rgba(37,99,235,.02) 100%);
 }
 .fg-sec svg { flex-shrink: 0; }
+.fg-sec-caret {
+  margin-left: auto;
+  width: 14px; height: 14px;
+  transition: transform .2s ease;
+  display: inline-flex; align-items: center; justify-content: center;
+  opacity: .7;
+}
+.fg-sec-caret svg { width: 12px; height: 12px; }
+.fg-collapsed .fg-sec-caret { transform: rotate(-90deg); }
+.fg-collapsed .fg-sec {
+  background: linear-gradient(90deg, rgba(100,116,139,.08) 0%, transparent 100%);
+  color: #475569;
+  border-left-color: #94a3b8;
+}
 
 /* Tweak the <li> rows that hold section headings */
 li:has(> label > .fg-sec) {
@@ -638,12 +728,74 @@ li:has(> label > .fg-banner) {
   padding: 0 !important;
   border-bottom: none !important;
 }
-/* Fallback for browsers without :has() — section inputs just vanish silently */
+li.fg-folded { display: none !important; }
 
 /* Input polish */
 .typecho-option input.text { border-radius: 7px; }
 .typecho-option input.text:focus { box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
-</style>'
+</style>
+<script>
+/* 分组折叠 — 点击 .fg-sec 切换后续兄弟可见性,直到下一个 section.
+   用 inline style.display 直接控制,绕开 Typecho admin CSS 的 specificity 干扰. */
+(function () {
+  function init() {
+    var secs = document.querySelectorAll(".fg-sec");
+    if (!secs.length) return;
+    var caretSvg = \'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>\';
+
+    secs.forEach(function (sec, idx) {
+      // 找包裹这个 .fg-sec 的表单项容器(Typecho 通常是 <li>,但兼容其他)
+      var container = sec.closest(".typecho-option") || sec.closest("li") || sec.parentElement.parentElement;
+      if (!container) return;
+      container.classList.add("fg-section-head");
+      container.dataset.fgIdx = idx;
+
+      // 加下拉箭头
+      var caret = document.createElement("span");
+      caret.className = "fg-sec-caret";
+      caret.innerHTML = caretSvg;
+      sec.appendChild(caret);
+
+      // 向后收集兄弟,直到下一个 .fg-sec 容器
+      var siblings = [];
+      var next = container.nextElementSibling;
+      while (next) {
+        if (next.querySelector && next.querySelector(".fg-sec")) break;
+        siblings.push(next);
+        next = next.nextElementSibling;
+      }
+
+      function applyState(folded) {
+        container.classList.toggle("fg-collapsed", folded);
+        for (var i = 0; i < siblings.length; i++) {
+          siblings[i].style.display = folded ? "none" : "";
+        }
+      }
+
+      // 还原状态 — 默认 idx>0 折叠 (只展开第一节「基础设置」),localStorage 优先
+      var key = "fg-sec-fold-" + idx;
+      var stored = null;
+      try { stored = localStorage.getItem(key); } catch (e) {}
+      var shouldFold = (stored === "1" || stored === "0") ? (stored === "1") : (idx > 0);
+      if (shouldFold) applyState(true);
+
+      // 点击切换 - preventDefault 防止 label 把 focus 给隐藏 input
+      sec.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var nextFolded = !container.classList.contains("fg-collapsed");
+        applyState(nextFolded);
+        try { localStorage.setItem(key, nextFolded ? "1" : "0"); } catch (e) {}
+      });
+    });
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>'
     );
 
     /* ═══ 1 基础设置 ═══════════════════════════════════════════ */
@@ -717,7 +869,20 @@ li:has(> label > .fg-banner) {
         _t('首页 / 归档 / 分类列表中，加密文章的标题是否一并隐藏。')
     );
 
-    /* ═══ 4 短代码 ══════════════════════════════════════════════ */
+    /* ═══ 4 首页置顶 ══════════════════════════════════════════════ */
+    $sStick = new Typecho_Widget_Helper_Form_Element_Text('__fg_sStick', null, '',
+        '<div class="fg-sec">'
+        . '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.5-3.5V8a3 3 0 0 0-3-3h-5a3 3 0 0 0-3 3v5.5L5 17z"/></svg>'
+        . '首页置顶</div>', ''
+    );
+
+    $stickyCidsField = new Typecho_Widget_Helper_Form_Element_Text(
+        'stickyCids', null, '',
+        _t('置顶文章 cid'),
+        _t('多个 cid 用英文逗号分隔,顺序就是首页「置顶推荐」区的展示顺序。例如 <code>12, 5, 99</code>。<br>也可以在文章编辑页右侧自定义字段里勾选「置顶到首页」,效果一样,两种方式都生效。')
+    );
+
+    /* ═══ 5 短代码 ══════════════════════════════════════════════ */
     $s4 = new Typecho_Widget_Helper_Form_Element_Text('__fg_s4', null, '',
         '<div class="fg-sec">'
         . '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>'
@@ -731,6 +896,68 @@ li:has(> label > .fg-banner) {
     $replyHideText = new Typecho_Widget_Helper_Form_Element_Text(
         'replyHideText', null, '评论后可见(需审核通过)',
         _t('[reply] 未评论占位文案'), ''
+    );
+
+    /* ═══ 5 音乐播放器 ══════════════════════════════════════════ */
+    $s5 = new Typecho_Widget_Helper_Form_Element_Text('__fg_s5', null, '',
+        '<div class="fg-sec">'
+        . '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
+        . '音乐播放器</div>', ''
+    );
+
+    $musicEnabled = new Typecho_Widget_Helper_Form_Element_Radio(
+        'musicEnabled',
+        array('off' => '关闭', 'on' => '启用'),
+        'off',
+        _t('全站迷你播放器'),
+        _t('开启后所有页面左下角会浮一个 APlayer 迷你播放器,基于 APlayer + MetingJS,不需要单独装 APlayer-Typecho-Plugin。')
+    );
+    $musicServer = new Typecho_Widget_Helper_Form_Element_Select(
+        'musicServer',
+        array('netease' => '网易云', 'tencent' => 'QQ 音乐', 'kugou' => '酷狗', 'xiami' => '虾米', 'baidu' => '百度'),
+        'netease',
+        _t('音乐源')
+    );
+    $musicType = new Typecho_Widget_Helper_Form_Element_Select(
+        'musicType',
+        array('playlist' => '歌单', 'song' => '单曲', 'album' => '专辑', 'artist' => '歌手 TOP 50', 'search' => '搜索关键词'),
+        'playlist',
+        _t('类型')
+    );
+    $musicId = new Typecho_Widget_Helper_Form_Element_Text(
+        'musicId', null, '',
+        _t('歌单 / 歌曲 ID'),
+        _t('网易云歌单 ID 在分享链接里。例如 <code>https://music.163.com/#/playlist?id=<strong>2619366284</strong></code> 就填 <code>2619366284</code>。搜索类型直接填关键词。')
+    );
+    $musicTheme = new Typecho_Widget_Helper_Form_Element_Text(
+        'musicTheme', null, '#3b82f6',
+        _t('主题色'),
+        _t('播放器进度条 / 高亮色,十六进制色值。默认 <code>#3b82f6</code>(主题蓝)。')
+    );
+    $musicAutoplay = new Typecho_Widget_Helper_Form_Element_Radio(
+        'musicAutoplay',
+        array('off' => '关闭', 'on' => '开启'),
+        'off',
+        _t('自动播放'),
+        _t('现代浏览器要求用户先与页面交互才允许自动播放声音,建议关闭。')
+    );
+    $musicListFolded = new Typecho_Widget_Helper_Form_Element_Radio(
+        'musicListFolded',
+        array('on' => '默认折叠', 'off' => '默认展开'),
+        'on',
+        _t('歌单初始状态')
+    );
+    $musicMobile = new Typecho_Widget_Helper_Form_Element_Radio(
+        'musicMobile',
+        array('hide' => '移动端隐藏', 'show' => '移动端也显示'),
+        'hide',
+        _t('移动端表现'),
+        _t('小屏播放器会挡内容,建议隐藏。')
+    );
+    $musicApi = new Typecho_Widget_Helper_Form_Element_Text(
+        'musicApi', null, 'https://api.i-meto.com/meting/api',
+        _t('Meting API 地址'),
+        _t('如果默认 API 加载不出来(国内访问 i-meto 偶尔不稳),可以换成 <code>https://api.injahow.cn/meting/</code> 或自部署的 <a href="https://github.com/metowolf/Meting-API" target="_blank">Meting-API</a>。')
     );
 
     /* ═══ 添加到 form ════════════════════════════════════════════ */
@@ -751,9 +978,23 @@ li:has(> label > .fg-banner) {
     $form->addInput($lockedCategories);
     $form->addInput($lockHideTitle);
 
+    $form->addInput($sStick);
+    $form->addInput($stickyCidsField);
+
     $form->addInput($s4);
     $form->addInput($loginHideText);
     $form->addInput($replyHideText);
+
+    $form->addInput($s5);
+    $form->addInput($musicEnabled);
+    $form->addInput($musicServer);
+    $form->addInput($musicType);
+    $form->addInput($musicId);
+    $form->addInput($musicTheme);
+    $form->addInput($musicAutoplay);
+    $form->addInput($musicListFolded);
+    $form->addInput($musicMobile);
+    $form->addInput($musicApi);
 }
 
 function themeFields($layout)
@@ -782,11 +1023,134 @@ function themeFields($layout)
         _t('如 PRODUCT、AI、ENGINEERING 等，显示在文章卡片左上角。')
     );
 
+    $pinned = new Typecho_Widget_Helper_Form_Element_Radio(
+        'pinned',
+        array('off' => '不置顶', 'on' => '置顶到首页'),
+        'off',
+        _t('置顶'),
+        _t('开启后此文会出现在首页「置顶推荐」区(Hero 下方,文章流上方)。')
+    );
+
     $layout->addItem($cover);
     $layout->addItem($summary);
+    $layout->addItem($pinned);
     $layout->addItem($badge);
 }
 
+/**
+ * 站点统计面板数据：近 10 个月文章 / 评论日历，月度发布柱图，分类雷达 + 饼图，标签 TOP 20。
+ * 返回结构会被 footer.php 序列化成 window.fluxgridStats，供 theme.js 用 ECharts 渲染。
+ */
+function fluxgrid_stats_data()
+{
+    try {
+        $db = Typecho_Db::get();
 
+        $endTs   = time();
+        $startTs = strtotime('-10 months', $endTs);
 
+        // ── 日级活动热力图 ───────────────────────────────────────
+        $daily = array(); // 'YYYY-MM-DD' => array('p' => N, 'c' => N)
 
+        $posts = $db->fetchAll(
+            $db->select('created')
+                ->from('table.contents')
+                ->where('type = ?', 'post')
+                ->where('status = ?', 'publish')
+                ->where('created >= ?', $startTs)
+                ->where('created <= ?', $endTs)
+        );
+        foreach ($posts as $row) {
+            $d = date('Y-m-d', (int) $row['created']);
+            if (!isset($daily[$d])) { $daily[$d] = array('p' => 0, 'c' => 0); }
+            $daily[$d]['p']++;
+        }
+
+        $comments = $db->fetchAll(
+            $db->select('created')
+                ->from('table.comments')
+                ->where('status = ?', 'approved')
+                ->where('created >= ?', $startTs)
+                ->where('created <= ?', $endTs)
+        );
+        foreach ($comments as $row) {
+            $d = date('Y-m-d', (int) $row['created']);
+            if (!isset($daily[$d])) { $daily[$d] = array('p' => 0, 'c' => 0); }
+            $daily[$d]['c']++;
+        }
+
+        $heatmap = array();
+        foreach ($daily as $d => $stat) {
+            // ECharts calendar 期望 [date, value] — 这里 value 用 文章+评论 的总活动量
+            $heatmap[] = array($d, $stat['p'] + $stat['c'], $stat['p'], $stat['c']);
+        }
+
+        // ── 月度聚合 ─────────────────────────────────────────────
+        $monthly = array();
+        for ($i = 9; $i >= 0; $i--) {
+            $ts  = strtotime("-{$i} months", $endTs);
+            $key = date('Y-m', $ts);
+            $monthly[$key] = array('p' => 0, 'c' => 0);
+        }
+        foreach ($daily as $d => $stat) {
+            $m = substr($d, 0, 7);
+            if (isset($monthly[$m])) {
+                $monthly[$m]['p'] += $stat['p'];
+                $monthly[$m]['c'] += $stat['c'];
+            }
+        }
+        $monthlyArr = array();
+        foreach ($monthly as $m => $stat) {
+            $monthlyArr[] = array('month' => $m, 'posts' => $stat['p'], 'comments' => $stat['c']);
+        }
+
+        // ── 分类 ────────────────────────────────────────────────
+        $catRows = $db->fetchAll(
+            $db->select('name', 'count')
+                ->from('table.metas')
+                ->where('type = ?', 'category')
+                ->order('count', Typecho_Db::SORT_DESC)
+        );
+        $categories = array();
+        foreach ($catRows as $c) {
+            $count = (int) $c['count'];
+            if ($count <= 0) { continue; }
+            $name = trim((string) $c['name']);
+            if ($name === '' || $name === '默认分类') { continue; }
+            $categories[] = array('name' => $name, 'count' => $count);
+        }
+
+        // ── 标签 (TOP 20) ──────────────────────────────────────
+        $tagRows = $db->fetchAll(
+            $db->select('name', 'count')
+                ->from('table.metas')
+                ->where('type = ?', 'tag')
+                ->order('count', Typecho_Db::SORT_DESC)
+                ->limit(20)
+        );
+        $tags = array();
+        foreach ($tagRows as $t) {
+            $count = (int) $t['count'];
+            if ($count <= 0) { continue; }
+            $name = trim((string) $t['name']);
+            if ($name === '') { continue; }
+            $tags[] = array('name' => $name, 'count' => $count);
+        }
+
+        return array(
+            'heatmap'    => $heatmap,
+            'monthly'    => $monthlyArr,
+            'categories' => $categories,
+            'tags'       => $tags,
+            'startDate'  => date('Y-m-d', $startTs),
+            'endDate'    => date('Y-m-d', $endTs),
+        );
+    } catch (Exception $e) {
+        return array(
+            'heatmap' => array(), 'monthly' => array(),
+            'categories' => array(), 'tags' => array(),
+            'startDate' => date('Y-m-d', strtotime('-10 months')),
+            'endDate'   => date('Y-m-d'),
+        );
+    }
+}

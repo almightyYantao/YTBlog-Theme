@@ -135,6 +135,9 @@ if (count($navItems) > $navVisibleLimit) {
           'shortcodes.css',    // 所有短代码样式
           'github.css',        // GitHub 页
           'lock.css',          // 加密 UI
+          'stats.css',         // 站点统计 modal
+          'music.css',         // 全站迷你音乐播放器
+          'sticky.css',        // 首页置顶文章区
       );
       foreach ($fluxCssFiles as $fluxCssFile) {
           echo '    <link rel="stylesheet" href="' . fluxgrid_escape(fluxgrid_asset_url($this->options, 'assets/css/' . $fluxCssFile)) . '">' . "\n";
@@ -210,13 +213,21 @@ if (count($navItems) > $navVisibleLimit) {
 
             <?php $currentSearch = isset($_GET['s']) ? (string) $_GET['s'] : ''; ?>
             <form class="search-box" action="<?php $this->options->siteUrl(); ?>" method="get" role="search">
-                <input type="text" name="s" placeholder="搜索文章…" value="<?php echo fluxgrid_escape($currentSearch); ?>" autocomplete="off">
-                <button type="submit" class="kbd" aria-label="搜索">GO</button>
+                <button type="submit" class="search-icon-btn" aria-label="搜索">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+                <input type="text" name="s" id="site-search-input" placeholder="搜索文章…" value="<?php echo fluxgrid_escape($currentSearch); ?>" autocomplete="off">
+                <kbd class="search-hint" aria-hidden="true"><span class="search-hint-mac">⌘</span><span class="search-hint-win">Ctrl</span>K</kbd>
             </form>
 
-            <button type="button" class="theme-toggle" id="theme-toggle" aria-label="切换明暗主题" data-no-swup>
-                <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-            </button>
+            <div class="header-actions">
+                <button type="button" class="header-action stats-toggle" id="stats-toggle" aria-label="站点统计" data-no-swup>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/><circle cx="7" cy="14" r="1.5" fill="currentColor"/><circle cx="11" cy="10" r="1.5" fill="currentColor"/><circle cx="15" cy="14" r="1.5" fill="currentColor"/><circle cx="20" cy="9" r="1.5" fill="currentColor"/></svg>
+                </button>
+                <button type="button" class="header-action theme-toggle" id="theme-toggle" aria-label="切换明暗主题" data-no-swup>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+            </div>
         </div>
     </header>

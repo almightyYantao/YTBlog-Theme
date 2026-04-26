@@ -98,6 +98,100 @@ try {
 } catch (Throwable $e) {
     $latestComments = array();
 }
+
+// 置顶文章: 直接按 cid 查 DB, 不依赖文章新旧顺序, 老文章也能正确显示。
+$stickyPosts = array();
+$stickyCids = fluxgrid_sticky_cids($this->options);
+if (!empty($stickyCids)) {
+    try {
+        $db = Typecho_Db::get();
+        $cidList = implode(',', array_map('intval', $stickyCids));
+        $rows = $db->fetchAll(
+            $db->select()->from('table.contents')
+                ->where('type = ?', 'post')
+                ->where('status = ?', 'publish')
+                ->where("cid IN ({$cidList})")
+        );
+
+        // 一次性取出所有 sticky 文章的自定义字段 (banner / cover / summary / badge)
+        $fieldsByCid = array();
+        if (!empty($rows)) {
+            $fieldRows = $db->fetchAll(
+                $db->select()->from('table.fields')->where("cid IN ({$cidList})")
+            );
+            foreach ($fieldRows as $f) {
+                $fieldsByCid[(int) $f['cid']][$f['name']] = (string) $f['str_value'];
+            }
+        }
+
+        $byCid = array();
+        foreach ($rows as $row) {
+            $cid = (int) $row['cid'];
+            $fields = isset($fieldsByCid[$cid]) ? $fieldsByCid[$cid] : array();
+
+            // 图片: banner → cover → 文章首图 → 随机图
+            $image = '';
+            foreach (array('banner', 'cover') as $fname) {
+                if (!empty($fields[$fname])) {
+                    $image = fluxgrid_sanitize_image_source($fields[$fname]);
+                    if ($image !== '') { break; }
+                }
+            }
+            if ($image === '') {
+                $image = fluxgrid_first_image((string) $row['text']);
+            }
+            if ($image === '') {
+                $image = fluxgrid_fallback_image($this->options, $cid);
+            }
+
+            // 摘要: summary 字段优先, 否则用文章正文截取
+            if (!empty($fields['summary'])) {
+                $excerpt = preg_replace('/\s+/u', ' ', $fields['summary']);
+            } else {
+                $plain = preg_replace('/<!--.*?-->/us', '', (string) $row['text']);
+                $plain = preg_replace('/```[\s\S]*?```/u', ' ', $plain);
+                $plain = strip_tags($plain);
+                $plain = preg_replace('/!\[[^\]]*\]\([^)]*\)/u', '', $plain);
+                $plain = preg_replace('/\[([^\]]+)\]\([^)]*\)/u', '$1', $plain);
+                $plain = trim(preg_replace('/\s+/u', ' ', $plain));
+                if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+                    $excerpt = mb_strlen($plain, 'UTF-8') > 140
+                        ? mb_substr($plain, 0, 140, 'UTF-8') . '...'
+                        : $plain;
+                } else {
+                    $excerpt = strlen($plain) > 140 ? substr($plain, 0, 140) . '...' : $plain;
+                }
+            }
+
+            // 用 Typecho_Router 生成永久链接
+            $row['type'] = 'post';
+            $row['slug'] = isset($row['slug']) ? $row['slug'] : '';
+            try {
+                $permalink = Typecho_Router::url('post', $row, $this->options->index);
+            } catch (Exception $e) {
+                $permalink = $this->options->siteUrl . '?p=' . $cid;
+            }
+
+            $byCid[$cid] = array(
+                'permalink' => fluxgrid_normalize_url_like_value($permalink),
+                'title'     => trim(strip_tags((string) $row['title'])),
+                'excerpt'   => $excerpt,
+                'date'      => date('Y.m.d', (int) $row['created']),
+                'image'     => $image,
+                'badge'     => !empty($fields['badge']) ? $fields['badge'] : 'PINNED',
+            );
+        }
+
+        // 按 sticky 列表的顺序输出 (主题设置里手填的 cid 顺序优先)
+        foreach ($stickyCids as $cid) {
+            if (isset($byCid[$cid])) {
+                $stickyPosts[] = $byCid[$cid];
+            }
+        }
+    } catch (Exception $e) {
+        // DB 查询失败,$stickyPosts 留空,首页不显示置顶区
+    }
+}
 ?>
 <main class="site-main">
     <?php if (!empty($heroSlides)): ?>
@@ -152,8 +246,13 @@ try {
                 <?php endforeach; ?>
 
                 <?php if (count($heroSlides) > 1): ?>
-                    <div class="flux-container hero-controls">
-                        <button class="hero-arrow" type="button" data-hero-prev aria-label="上一张">‹</button>
+                    <div class="hero-controls">
+                        <button class="hero-arrow hero-arrow--prev" type="button" data-hero-prev aria-label="上一张">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg>
+                        </button>
+                        <button class="hero-arrow hero-arrow--next" type="button" data-hero-next aria-label="下一张">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+                        </button>
                         <div class="hero-dots">
                             <?php for ($dotIndex = 0; $dotIndex < count($heroSlides); $dotIndex++): ?>
                                 <button
@@ -164,9 +263,45 @@ try {
                                 ></button>
                             <?php endfor; ?>
                         </div>
-                        <button class="hero-arrow" type="button" data-hero-next aria-label="下一张">›</button>
                     </div>
                 <?php endif; ?>
+            </div>
+        </section>
+    <?php endif; ?>
+
+    <?php if (!empty($stickyPosts)): ?>
+        <section class="sticky-section">
+            <div class="flux-container">
+                <div class="section-heading section-heading--row">
+                    <div>
+                        <span class="section-tag">PINNED</span>
+                        <h2>置顶推荐</h2>
+                    </div>
+                    <p><?php echo count($stickyPosts); ?> 篇精选文章</p>
+                </div>
+                <div class="sticky-grid sticky-grid--<?php echo min(count($stickyPosts), 3); ?>">
+                    <?php foreach ($stickyPosts as $sp): ?>
+                        <a class="sticky-card" href="<?php echo fluxgrid_escape($sp['permalink']); ?>">
+                            <div class="sticky-card-media">
+                                <img
+                                    src="<?php echo fluxgrid_escape(fluxgrid_safe_image_url($sp['image'], $this->options)); ?>"
+                                    alt="<?php echo fluxgrid_escape($sp['title']); ?>"
+                                    loading="lazy"
+                                    onerror="<?php echo fluxgrid_escape(fluxgrid_image_fallback_script($this->options)); ?>"
+                                >
+                            </div>
+                            <div class="sticky-card-overlay"></div>
+                            <div class="sticky-card-body">
+                                <span class="sticky-card-badge">// <?php echo fluxgrid_escape($sp['badge']); ?></span>
+                                <h3><?php echo fluxgrid_escape($sp['title']); ?></h3>
+                                <?php if ($sp['excerpt'] !== ''): ?>
+                                    <p><?php echo fluxgrid_escape($sp['excerpt']); ?></p>
+                                <?php endif; ?>
+                                <span class="sticky-card-date"><?php echo fluxgrid_escape($sp['date']); ?></span>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </section>
     <?php endif; ?>

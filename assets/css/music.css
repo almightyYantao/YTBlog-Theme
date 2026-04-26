@@ -1,0 +1,175 @@
+/* ════════════════════════════════════════════════════════════════════
+ * 全站迷你音乐播放器 (APlayer + MetingJS, fixed=true 模式)
+ * meting-js 会替换自身为 <div class="aplayer aplayer-fixed">,
+ * 这里覆盖 APlayer 默认皮肤,使其和主题暗 / 亮色协调。
+ * ════════════════════════════════════════════════════════════════════ */
+
+.aplayer.aplayer-fixed {
+  z-index: 9990 !important;
+  background: rgba(17, 24, 39, 0.86) !important;
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.34), 0 2px 6px rgba(0, 0, 0, 0.18) !important;
+  margin: 0 0 18px 18px !important;
+  /* 不能 overflow:hidden — APlayer 把 .aplayer-miniswitcher 用 right:-25px
+     钉在 outer 右边缘外侧,overflow:hidden 会把这个 ">" 切换条整个裁掉. */
+  overflow: visible !important;
+  transition: width .32s cubic-bezier(.2,.8,.3,1);
+}
+
+/* 把圆角放到内层 body / list / lrc, 让 narrow 态的封面有 12px 左侧圆角,
+   同时 ">" 切换条仍然可见在右侧外延. */
+.aplayer.aplayer-fixed .aplayer-body {
+  border-radius: 12px 0 0 12px;
+  overflow: hidden;
+}
+.aplayer.aplayer-fixed .aplayer-list,
+.aplayer.aplayer-fixed .aplayer-lrc {
+  border-radius: 0 0 0 12px;
+  overflow: hidden;
+}
+
+/* APlayer 默认 fixed 模式启动就是 .aplayer-narrow:
+   左下角 66×66 封面 + 右侧 ">" 切换条, hover/click 滑出完整迷你播放器.
+   这里只覆盖颜色,不动 layout,完全沿用 APlayer 原生表现. */
+.aplayer.aplayer-fixed.aplayer-narrow { cursor: pointer; }
+.aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+  border-radius: 12px;
+}
+
+/* 黑胶感: 折叠态播放时封面缓慢旋转 */
+@keyframes fg-music-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.aplayer.aplayer-fixed.aplayer-narrow.aplayer-playing .aplayer-pic {
+  animation: fg-music-rotate 14s linear infinite;
+}
+
+/* 主体 */
+.aplayer.aplayer-fixed .aplayer-body {
+  background: transparent !important;
+}
+.aplayer.aplayer-fixed .aplayer-info {
+  background: transparent !important;
+  border-color: var(--border-soft) !important;
+}
+.aplayer.aplayer-fixed .aplayer-title {
+  color: var(--heading) !important;
+  font-weight: 600 !important;
+}
+.aplayer.aplayer-fixed .aplayer-author {
+  color: var(--muted) !important;
+}
+.aplayer.aplayer-fixed .aplayer-time {
+  color: var(--muted-2) !important;
+}
+
+/* 进度条 + 控件图标 */
+.aplayer.aplayer-fixed .aplayer-controller .aplayer-bar {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+.aplayer.aplayer-fixed .aplayer-icon path {
+  fill: var(--muted) !important;
+  transition: fill .15s ease;
+}
+.aplayer.aplayer-fixed .aplayer-icon:hover path {
+  fill: var(--heading) !important;
+}
+.aplayer.aplayer-fixed .aplayer-volume-bar {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* 折叠时左侧的小切换条 */
+.aplayer.aplayer-fixed .aplayer-miniswitcher {
+  background: var(--card-2) !important;
+  border-radius: 0 10px 10px 0 !important;
+}
+.aplayer.aplayer-fixed .aplayer-miniswitcher .aplayer-icon path {
+  fill: var(--blue-light) !important;
+}
+.aplayer.aplayer-fixed .aplayer-miniswitcher:hover {
+  background: var(--blue) !important;
+}
+.aplayer.aplayer-fixed .aplayer-miniswitcher:hover .aplayer-icon path {
+  fill: #fff !important;
+}
+
+/* 歌词浮层 */
+.aplayer.aplayer-fixed .aplayer-lrc {
+  background: transparent !important;
+}
+.aplayer.aplayer-fixed .aplayer-lrc:before,
+.aplayer.aplayer-fixed .aplayer-lrc:after {
+  background: linear-gradient(transparent, rgba(17, 24, 39, 0.86)) !important;
+}
+.aplayer.aplayer-fixed .aplayer-lrc p {
+  color: var(--muted) !important;
+}
+.aplayer.aplayer-fixed .aplayer-lrc p.aplayer-lrc-current {
+  color: var(--blue-light) !important;
+  font-weight: 500;
+}
+
+/* 歌单列表 */
+.aplayer.aplayer-fixed .aplayer-list {
+  background: rgba(11, 15, 20, 0.55) !important;
+  border-top: 1px solid var(--border) !important;
+}
+.aplayer.aplayer-fixed .aplayer-list ol {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.aplayer.aplayer-fixed .aplayer-list li {
+  border-top: 1px solid var(--border-soft) !important;
+  background: transparent !important;
+  color: var(--body) !important;
+  transition: background .12s ease !important;
+}
+.aplayer.aplayer-fixed .aplayer-list li:first-child { border-top: 0 !important; }
+.aplayer.aplayer-fixed .aplayer-list li:hover {
+  background: rgba(59, 130, 246, 0.12) !important;
+}
+.aplayer.aplayer-fixed .aplayer-list li.aplayer-list-light {
+  background: rgba(59, 130, 246, 0.20) !important;
+}
+.aplayer.aplayer-fixed .aplayer-list li .aplayer-list-index {
+  color: var(--muted-2) !important;
+}
+.aplayer.aplayer-fixed .aplayer-list li .aplayer-list-title {
+  color: var(--body) !important;
+}
+.aplayer.aplayer-fixed .aplayer-list li .aplayer-list-author {
+  color: var(--muted-2) !important;
+}
+.aplayer.aplayer-fixed .aplayer-list-cur {
+  background: var(--blue) !important;
+}
+
+/* ── 浅色主题适配 ─────────────────────────────────────────────── */
+html[data-theme="light"] .aplayer.aplayer-fixed {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.18), 0 2px 6px rgba(15, 23, 42, 0.06) !important;
+}
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-title  { color: #111827 !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-author { color: #6b7280 !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-time   { color: #94a3b8 !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-controller .aplayer-bar,
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-volume-bar { background: #e5e7eb !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-icon path { fill: #6b7280 !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-icon:hover path { fill: #111827 !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-miniswitcher { background: #f3f4f6 !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-miniswitcher .aplayer-icon path { fill: var(--blue-2) !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-list  { background: rgba(248, 250, 252, 0.85) !important; border-top-color: #e5e7eb !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-list li { border-top-color: #f1f5f9 !important; color: #1f2937 !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-list li:hover { background: rgba(37, 99, 235, 0.08) !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-list li.aplayer-list-light { background: rgba(37, 99, 235, 0.14) !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-list li .aplayer-list-title  { color: #1f2937 !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-list li .aplayer-list-author { color: #94a3b8 !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-lrc:before,
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-lrc:after { background: linear-gradient(transparent, rgba(255, 255, 255, 0.92)) !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-lrc p { color: #6b7280 !important; }
+html[data-theme="light"] .aplayer.aplayer-fixed .aplayer-lrc p.aplayer-lrc-current { color: var(--blue-2) !important; }

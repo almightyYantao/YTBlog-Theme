@@ -1,0 +1,164 @@
+/* ========================================================================
+ * 站点统计 modal —— 顶栏图标按钮触发，全屏遮罩 + 卡片网格
+ * 内部图表用 ECharts（懒加载 CDN）
+ * ====================================================================== */
+
+/* 顶栏触发按钮样式见 theme-light.css 里的 .header-actions / .header-action */
+
+/* ── Modal 容器 ──────────────────────────────────────────────── */
+.stats-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.stats-modal[hidden] { display: none; }
+
+.stats-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: stats-fade .18s ease both;
+}
+
+.stats-modal-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 1080px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.45), 0 6px 16px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: stats-pop .22s cubic-bezier(.2,.8,.3,1) both;
+}
+
+@keyframes stats-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes stats-pop {
+  from { opacity: 0; transform: translateY(12px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* ── 头部 ─────────────────────────────────────────────────── */
+.stats-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.stats-modal-header h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--heading);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.stats-modal-header h2::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  background: var(--blue);
+  border-radius: 2px;
+}
+
+.stats-modal-close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-soft);
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.stats-modal-close:hover {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* ── 卡片网格 ────────────────────────────────────────────── */
+.stats-modal-body {
+  padding: 18px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.stats-card {
+  background: var(--card-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.stats-card--full { grid-column: 1 / -1; }
+
+.stats-card h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stats-card h3::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  background: var(--blue);
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.stats-chart {
+  width: 100%;
+  height: 260px;
+}
+.stats-card--full .stats-chart { height: 200px; }
+
+.stats-empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--muted-2);
+  font-size: 13px;
+}
+
+/* ── 浅色主题覆盖 ─────────────────────────────────────────── */
+html[data-theme="light"] .stats-modal-backdrop {
+  background: rgba(15, 23, 42, 0.42);
+}
+html[data-theme="light"] .stats-modal-dialog {
+  box-shadow: 0 32px 80px rgba(15, 23, 42, 0.18), 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+html[data-theme="light"] .stats-modal-close:hover {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+/* ── 移动端 ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .stats-modal { padding: 12px; }
+  .stats-modal-body { grid-template-columns: 1fr; padding: 12px; gap: 10px; }
+  .stats-chart { height: 220px; }
+  .stats-card--full .stats-chart { height: 180px; }
+}

@@ -1,37 +1,46 @@
-/* ============ Theme toggle button ============ */
-.theme-toggle {
-  width: 40px;
-  height: 40px;
+/* ============ 顶栏图标按钮（统计 / 主题）============ */
+.header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.header-action {
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg-soft);
-  color: var(--muted);
+  border: 0;
+  background: transparent;
+  color: var(--muted-2);
+  border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
-  flex-shrink: 0;
+  transition: color .15s ease, transform .15s ease;
 }
-
-.theme-toggle:hover {
-  border-color: var(--blue);
+.header-action:hover {
   color: var(--blue-light);
-  transform: translateY(-1px);
+  transform: scale(1.1);
 }
+.header-action:focus { outline: none; }
+.header-action:focus-visible {
+  color: var(--blue-light);
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.header-action svg { display: block; }
 
-.theme-toggle svg { display: block; }
-.theme-toggle .icon-sun { display: none; }
+/* 主题图标显隐：暗色显月亮 / 浅色显太阳 */
+.theme-toggle .icon-sun  { display: none; }
 .theme-toggle .icon-moon { display: block; }
-
-html[data-theme="light"] .theme-toggle .icon-sun { display: block; }
+html[data-theme="light"] .theme-toggle .icon-sun  { display: block; }
 html[data-theme="light"] .theme-toggle .icon-moon { display: none; }
-html[data-theme="light"] .theme-toggle:hover { color: var(--blue-2); }
 
-@media (max-width: 1060px) {
-  .theme-toggle { width: 40px; height: 40px; }
-}
+/* 浅色主题适配 */
+html[data-theme="light"] .header-action { color: #6b7280; }
+html[data-theme="light"] .header-action:hover { color: var(--blue-2); }
 
 /* ============ Hero arrow light theme ============ */
 html[data-theme="light"] .hero-arrow {

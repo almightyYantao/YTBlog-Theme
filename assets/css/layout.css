@@ -125,18 +125,18 @@
 }
 
 .search-box {
-  min-width: 220px;
+  min-width: 240px;
   height: 38px;
   border: 1px solid var(--border);
   background: var(--bg-soft);
   border-radius: 999px;
   display: flex;
   align-items: center;
-  padding: 0 6px 0 14px;
-  gap: 8px;
+  padding: 0 8px 0 4px;
+  gap: 6px;
   color: var(--muted-2);
   font-size: 13px;
-  transition: border-color .2s ease;
+  transition: border-color .2s ease, box-shadow .2s ease;
 }
 
 .search-box:focus-within {
@@ -161,49 +161,90 @@
   color: var(--muted-2);
 }
 
-.kbd {
-  padding: 3px 9px;
-  border-radius: 6px;
-  background: #020617;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
+/* 搜索图标按钮:无框,纯图标,hover 变蓝 */
+.search-icon-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted-2);
+  border-radius: 50%;
   cursor: pointer;
-  transition: .2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s ease, background .15s ease;
+  flex-shrink: 0;
 }
+.search-icon-btn:hover { color: var(--blue-light); background: rgba(59,130,246,0.12); }
+.search-icon-btn:focus { outline: none; }
+.search-icon-btn:focus-visible { color: var(--blue-light); background: rgba(59,130,246,0.12); }
 
-button.kbd {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.28);
-  color: var(--blue-light);
+/* ⌘K / Ctrl+K 提示 */
+.search-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--muted-2);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
 }
+.search-box:focus-within .search-hint { opacity: 0; }
 
-button.kbd:hover {
-  background: rgba(59, 130, 246, 0.28);
-  color: #fff;
+/* 平台区分:Mac 显示 ⌘,其他显示 Ctrl(默认隐藏 mac,JS 检测后切换) */
+.search-hint-mac { display: none; }
+.search-hint-win { display: inline; }
+html.is-mac .search-hint-mac { display: inline; }
+html.is-mac .search-hint-win { display: none; }
+
+/* 浅色主题 */
+html[data-theme="light"] .search-hint {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #6b7280;
 }
 
 .nav-toggle {
   display: none;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg-soft);
-  color: var(--muted);
+  border: 0;
+  background: transparent;
+  color: var(--muted-2);
+  border-radius: 8px;
   cursor: pointer;
   flex-shrink: 0;
+  transition: color .15s ease, transform .15s ease;
 }
+.nav-toggle:hover { color: var(--blue-light); transform: scale(1.1); }
+.nav-toggle:focus { outline: none; }
+.nav-toggle:focus-visible {
+  color: var(--blue-light);
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+html[data-theme="light"] .nav-toggle { color: #6b7280; }
+html[data-theme="light"] .nav-toggle:hover { color: var(--blue-2); }
 
 .nav-toggle span {
   display: block;
-  width: 18px;
+  width: 20px;
   height: 2px;
   margin: 0 auto;
   background: currentColor;
+  border-radius: 2px;
+  transition: transform .2s ease;
 }
 
 .nav-toggle span + span { margin-top: 5px; }
@@ -399,51 +440,114 @@ button.kbd:hover {
 .cw-fn { color: var(--purple); }
 .cw-cm { color: var(--muted-2); }
 
-/* ============ Hero carousel controls ============ */
+/* ============ Hero carousel controls (overlay) ============ */
+/* hero-controls 容器铺满 hero,但不挡操作 (pointer-events: none),
+   内部按钮单独 pointer-events: auto。配合 .hero-carousel { position: relative } 使用。 */
 .hero-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 0 40px;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
 }
 
+/* hero arrows: 默认隐藏,hero 区域 hover 时淡入;轻量玻璃感无重阴影 */
 .hero-arrow {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(17, 24, 39, 0.6);
-  color: var(--muted);
+  position: absolute;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  background: rgba(17, 24, 39, 0.32);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
   display: grid;
   place-items: center;
-  transition: .2s ease;
-  font-size: 14px;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(-50%) scale(0.9);
+  transition: opacity .25s ease,
+              transform .25s cubic-bezier(.2,.8,.3,1),
+              background .2s ease,
+              border-color .2s ease,
+              color .2s ease;
+}
+
+/* hover hero 整体时淡入 */
+.hero-carousel:hover .hero-arrow,
+.hero-arrow:focus-visible {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+.hero-arrow svg {
+  width: 18px;
+  height: 18px;
+  transition: transform .2s ease;
 }
 
 .hero-arrow:hover {
-  border-color: var(--blue);
+  background: rgba(37, 99, 235, 0.55);
+  border-color: rgba(255, 255, 255, 0.32);
   color: #fff;
 }
+.hero-arrow--prev:hover svg { transform: translateX(-1px); }
+.hero-arrow--next:hover svg { transform: translateX( 1px); }
 
-.hero-dots { display: flex; gap: 8px; align-items: center; }
+.hero-arrow:active { transform: translateY(-50%) scale(0.94); }
+
+.hero-arrow:focus { outline: none; }
+.hero-arrow:focus-visible {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.45);
+}
+
+[data-hero-prev] { left: 18px; }
+[data-hero-next] { right: 18px; }
+
+.hero-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  pointer-events: auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
 
 .hero-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--border);
+  background: rgba(255, 255, 255, 0.4);
   border: 0;
   cursor: pointer;
   padding: 0;
   transition: .2s ease;
 }
+.hero-dot:hover { background: rgba(255, 255, 255, 0.7); }
 
 .hero-dot.is-active {
-  background: var(--blue);
+  background: #fff;
   width: 22px;
   border-radius: 999px;
+}
+
+/* 移动端缩小 + 贴边 */
+@media (max-width: 768px) {
+  .hero-arrow { width: 40px; height: 40px; }
+  .hero-arrow svg { width: 18px; height: 18px; }
+  [data-hero-prev] { left: 10px; }
+  [data-hero-next] { right: 10px; }
+  .hero-dots { bottom: 14px; }
 }
 
 /* ============ Sections ============ */

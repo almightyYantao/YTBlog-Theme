@@ -45,10 +45,18 @@
                             </div>
                         <?php endif; ?>
 
-                        <label>
-                            <span>评论内容</span>
-                            <textarea name="text" rows="6" required></textarea>
-                        </label>
+                        <div class="comment-text-field">
+                            <div class="comment-text-head">
+                                <label for="fluxgrid-comment-text">评论内容</label>
+                                <div class="comment-emoji-wrap">
+                                    <button type="button" class="comment-emoji-toggle" aria-label="插入表情" data-emoji-toggle>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                                    </button>
+                                    <div class="comment-emoji-panel" data-emoji-panel hidden></div>
+                                </div>
+                            </div>
+                            <textarea id="fluxgrid-comment-text" name="text" rows="6" required data-comment-text></textarea>
+                        </div>
 
                         <button class="button button-primary" type="submit">提交评论</button>
                     </form>

@@ -1,0 +1,178 @@
+/* ════════════════════════════════════════════════════════════════════
+ * 置顶文章区 — 大图叠字版,介于 Hero 和文章流之间
+ * ════════════════════════════════════════════════════════════════════ */
+.sticky-section {
+  padding: 36px 0 8px;
+}
+
+.section-heading--row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.section-heading--row > div { display: flex; flex-direction: column; gap: 6px; }
+.section-heading--row p {
+  margin: 0;
+  color: var(--muted-2);
+  font-size: 13px;
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+}
+
+/* ── grid: 1/2/3+ 篇都自动适配 ────────────────────────────── */
+.sticky-grid {
+  display: grid;
+  gap: 16px;
+}
+.sticky-grid--1 { grid-template-columns: 1fr; }
+.sticky-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sticky-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* 1 篇:大图,横向 banner 高度 */
+.sticky-grid--1 .sticky-card { aspect-ratio: 21 / 9; }
+/* 2 篇:中图 */
+.sticky-grid--2 .sticky-card { aspect-ratio: 16 / 10; }
+/* 3 篇:每张 4:3,稍紧凑 */
+.sticky-grid--3 .sticky-card { aspect-ratio: 4 / 3; }
+
+/* ── card: 大图填满 + 渐变遮罩 + 文字底部叠字 ─────────────── */
+.sticky-card {
+  position: relative;
+  display: block;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  isolation: isolate;
+  transition: transform .3s cubic-bezier(.2,.8,.3,1), box-shadow .3s ease, border-color .25s ease;
+}
+.sticky-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--blue);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.32);
+}
+
+.sticky-card-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.sticky-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .55s cubic-bezier(.2,.8,.3,1);
+}
+.sticky-card:hover .sticky-card-media img { transform: scale(1.05); }
+
+/* 底部深色到上方渐变遮罩,确保白字可读 */
+.sticky-card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(11, 15, 20, 0) 30%, rgba(11, 15, 20, 0.28) 55%, rgba(11, 15, 20, 0.86) 100%),
+    radial-gradient(ellipse at top right, rgba(59, 130, 246, 0.18), transparent 60%);
+  pointer-events: none;
+}
+
+.sticky-card-body {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 2;
+  padding: 18px 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #fff;
+}
+
+.sticky-card-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.28);
+  border: 1px solid rgba(59, 130, 246, 0.46);
+  color: #cfe1ff;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.sticky-card h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.sticky-grid--1 .sticky-card h3 { font-size: 24px; -webkit-line-clamp: 2; }
+
+.sticky-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  line-height: 1.55;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.sticky-grid--1 .sticky-card p { -webkit-line-clamp: 3; }
+.sticky-grid--3 .sticky-card p { display: none; } /* 3 篇时太挤,隐藏摘要 */
+
+.sticky-card-date {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.52);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+/* ── 响应式 ───────────────────────────────────────────────── */
+@media (max-width: 1060px) {
+  .sticky-grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sticky-grid--3 .sticky-card { aspect-ratio: 16 / 10; }
+  .sticky-grid--3 .sticky-card p { display: -webkit-box; }
+}
+@media (max-width: 640px) {
+  .sticky-grid,
+  .sticky-grid--2,
+  .sticky-grid--3 { grid-template-columns: 1fr; }
+  .sticky-grid--1 .sticky-card,
+  .sticky-grid--2 .sticky-card,
+  .sticky-grid--3 .sticky-card { aspect-ratio: 16 / 10; }
+  .sticky-card h3 { font-size: 17px; }
+  .sticky-grid--1 .sticky-card h3 { font-size: 20px; }
+  .section-heading--row { flex-direction: column; align-items: flex-start; }
+}
+
+/* ── 浅色主题适配 ─────────────────────────────────────────── */
+html[data-theme="light"] .sticky-card {
+  background: #f8fafc;
+  border-color: #e5e7eb;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+html[data-theme="light"] .sticky-card:hover {
+  border-color: var(--blue-2);
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.14);
+}
+html[data-theme="light"] .sticky-card-overlay {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0) 30%, rgba(15, 23, 42, 0.25) 55%, rgba(15, 23, 42, 0.78) 100%);
+}
+html[data-theme="light"] .section-heading--row p { color: var(--muted-2); }

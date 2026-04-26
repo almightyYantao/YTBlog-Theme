@@ -1,0 +1,87 @@
+name: Release theme zip
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag name (e.g. v1.0.1)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve tag / version
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG"           >> $GITHUB_OUTPUT
+          echo "version=$VERSION"   >> $GITHUB_OUTPUT
+          echo "zip=YTBlogTheme-${TAG}.zip" >> $GITHUB_OUTPUT
+
+      - name: Build zip
+        run: |
+          # 把仓库内容复制到 YTBlogTheme/ 目录,Typecho 解压后即落到 usr/themes/YTBlogTheme/
+          mkdir -p dist/YTBlogTheme
+          # rsync 排除 .git / .github / 编辑器残留 / 节点缓存
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.DS_Store' \
+            --exclude='*.swp' \
+            --exclude='node_modules' \
+            --exclude='dist' \
+            ./ dist/YTBlogTheme/
+          cd dist
+          zip -r "../${{ steps.meta.outputs.zip }}" YTBlogTheme
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git tag --sort=-creatordate | grep -v "^${{ steps.meta.outputs.tag }}$" | head -n 1 || true)
+          {
+            echo 'body<<CHANGELOG_EOF'
+            echo "## YTBlog Theme ${{ steps.meta.outputs.tag }}"
+            echo ""
+            if [ -n "$PREV_TAG" ]; then
+              echo "### Changes since \`$PREV_TAG\`"
+              echo ""
+              git log --pretty=format:'- %s (%h)' "$PREV_TAG..HEAD"
+            else
+              echo "### Initial release"
+              echo ""
+              git log --pretty=format:'- %s (%h)' -n 20
+            fi
+            echo ""
+            echo ""
+            echo "### Install"
+            echo ""
+            echo '```'
+            echo "下载 ${{ steps.meta.outputs.zip }} 解压到 typecho 的 usr/themes/ 目录,后台启用即可。"
+            echo '```'
+            echo CHANGELOG_EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.tag }}
+          body: ${{ steps.changelog.outputs.body }}
+          files: ${{ steps.meta.outputs.zip }}
+          draft: false
+          prerelease: false
