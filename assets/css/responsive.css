@@ -102,6 +102,9 @@
 
   .hero-slide { padding: 60px 0 30px; }
 
+  /* 移动端隐藏文章侧栏 (目录 + 文章信息) — 阅读时不被打扰 */
+  .article-aside { display: none !important; }
+
   .post-card {
     grid-template-columns: 1fr;
   }

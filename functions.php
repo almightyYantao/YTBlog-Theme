@@ -198,7 +198,7 @@ function fluxgrid_sticky_cids($context = null)
                     ->from('table.fields')
                     ->where('name = ?', 'pinned')
                     ->where('str_value = ?', 'on')
-                    ->order('cid', Typecho_Db::SORT_DESC)
+                    ->order('cid', 'DESC')
             );
             foreach ($rows as $row) {
                 $cid = (int) $row['cid'];
@@ -208,7 +208,9 @@ function fluxgrid_sticky_cids($context = null)
             }
         }
     } catch (Exception $e) {
-        // table.fields 查询失败 (空表 / 权限),忽略
+        // 忽略
+    } catch (Throwable $e) {
+        // PHP 7+ Error (Typecho_Db 类找不到 / namespace 改名 等)
     }
 
     // (3) Typecho 1.2+ 原生 stickyPosts (向后兼容)
@@ -756,10 +758,23 @@ li.fg-folded { display: none !important; }
       caret.innerHTML = caretSvg;
       sec.appendChild(caret);
 
-      // 向后收集兄弟,直到下一个 .fg-sec 容器
+      // 向后收集兄弟,直到下一个 .fg-sec 容器.
+      // Typecho 的保存按钮也是 <li class="typecho-option typecho-option-submit">,
+      // 同样带 typecho-option 类, 必须显式排查 submit 类 / 内部 submit 元素,
+      // 否则折叠最后一个分组时会把保存按钮一起隐藏.
       var siblings = [];
       var next = container.nextElementSibling;
       while (next) {
+        if (!next.classList) break;
+        // 不是字段行 (例如某种装饰性 <li> / <hr> / 别的 <ul>)
+        if (!next.classList.contains("typecho-option")) break;
+        // 显式 submit 行
+        if (next.classList.contains("typecho-option-submit")) break;
+        // 内部带任何 submit 控件的也跳过 (兜底各种 Typecho 主题 / 版本变体)
+        if (next.querySelector && next.querySelector(
+          \'button[type="submit"], input[type="submit"], button.btn-primary, button.primary\'
+        )) break;
+        // 下一个分组
         if (next.querySelector && next.querySelector(".fg-sec")) break;
         siblings.push(next);
         next = next.nextElementSibling;

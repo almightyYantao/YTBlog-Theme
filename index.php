@@ -102,22 +102,25 @@ try {
 // 置顶文章: 直接按 cid 查 DB, 不依赖文章新旧顺序, 老文章也能正确显示。
 $stickyPosts = array();
 $stickyCids = fluxgrid_sticky_cids($this->options);
-if (!empty($stickyCids)) {
+if (!empty($stickyCids) && class_exists('Typecho_Db')) {
     try {
         $db = Typecho_Db::get();
+        // int-cast + 拼字面值; 因为已经全是整数,无 SQL 注入风险,
+        // 也避免 Typecho_Db_Query 的 IN 多绑定在不同版本表现不一致。
         $cidList = implode(',', array_map('intval', $stickyCids));
+
         $rows = $db->fetchAll(
             $db->select()->from('table.contents')
                 ->where('type = ?', 'post')
                 ->where('status = ?', 'publish')
-                ->where("cid IN ({$cidList})")
+                ->where('cid IN (' . $cidList . ')')
         );
 
         // 一次性取出所有 sticky 文章的自定义字段 (banner / cover / summary / badge)
         $fieldsByCid = array();
         if (!empty($rows)) {
             $fieldRows = $db->fetchAll(
-                $db->select()->from('table.fields')->where("cid IN ({$cidList})")
+                $db->select()->from('table.fields')->where('cid IN (' . $cidList . ')')
             );
             foreach ($fieldRows as $f) {
                 $fieldsByCid[(int) $f['cid']][$f['name']] = (string) $f['str_value'];
@@ -166,10 +169,18 @@ if (!empty($stickyCids)) {
             // 用 Typecho_Router 生成永久链接
             $row['type'] = 'post';
             $row['slug'] = isset($row['slug']) ? $row['slug'] : '';
+            $permalink = '';
             try {
-                $permalink = Typecho_Router::url('post', $row, $this->options->index);
+                if (class_exists('Typecho_Router')) {
+                    $permalink = Typecho_Router::url('post', $row, $this->options->index);
+                }
             } catch (Exception $e) {
-                $permalink = $this->options->siteUrl . '?p=' . $cid;
+                $permalink = '';
+            } catch (Throwable $e) {
+                $permalink = '';
+            }
+            if ($permalink === '' || $permalink === null) {
+                $permalink = rtrim((string) $this->options->siteUrl, '/') . '/?p=' . $cid;
             }
 
             $byCid[$cid] = array(
@@ -189,7 +200,10 @@ if (!empty($stickyCids)) {
             }
         }
     } catch (Exception $e) {
-        // DB 查询失败,$stickyPosts 留空,首页不显示置顶区
+        $stickyPosts = array();
+    } catch (Throwable $e) {
+        // PHP 7+ Error 兜底 (Typecho_Db 类找不到、SQL 语法错误等)
+        $stickyPosts = array();
     }
 }
 ?>
