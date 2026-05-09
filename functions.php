@@ -93,16 +93,51 @@ function fluxgrid_string_value($value)
 
 function fluxgrid_widget_text($widget, $method, $property = null)
 {
-    $value = fluxgrid_widget_output($widget, $method);
-    if ($value !== '') {
-        return $value;
-    }
-
+    // Typecho 的 Widget_Abstract_Contents::push() 会把 title 提前 htmlspecialchars,
+    // 所以 $widget->title 拿到的是 "Prometheus &amp; Grafana" 而不是裸文本;
+    // title() 方法输出的也是这份预编码值。我们这里统一做一次 html_entity_decode
+    // 还原成裸文本, 调用方再 fluxgrid_escape 一次, 就不会出现 &amp;amp; 的二次转义。
+    // html_entity_decode 对纯文本是幂等的, 对 URL 也安全 (& vs &amp;)。
     if ($property !== null && is_object($widget) && isset($widget->$property)) {
-        return fluxgrid_string_value($widget->$property);
+        $raw = fluxgrid_string_value($widget->$property);
+        if ($raw !== '') {
+            return html_entity_decode($raw, ENT_QUOTES, 'UTF-8');
+        }
     }
 
-    return '';
+    $value = fluxgrid_widget_output($widget, $method);
+    return $value !== '' ? html_entity_decode($value, ENT_QUOTES, 'UTF-8') : '';
+}
+
+/**
+ * 把含有 Markdown / shortcode / HTML 的内容压成纯文本摘要,
+ * 用于首页置顶卡片、[post] 卡片等纯文字预览场景。
+ */
+function fluxgrid_plain_excerpt($text, $maxLen = 140)
+{
+    if (!is_string($text) || $text === '') {
+        return '';
+    }
+    $plain = preg_replace('/<!--.*?-->/us', '', $text);
+    $plain = preg_replace('/```[\s\S]*?```/u', ' ', $plain);
+    // 先剥短代码 (含 body 的成对标签和独立标记), 再剥 HTML, 顺序重要:
+    // 短代码可能跨多行,先按文本规则处理才能整段去掉 [scode]...[/scode] 这类块。
+    $plain = preg_replace('#\[(?:scode|tag|button|collapse|login|reply|tabs|tab|timeline|item|column|block)\b[^\]]*\][\s\S]*?\[/(?:scode|tag|button|collapse|login|reply|tabs|tab|timeline|item|column|block)\]#u', ' ', $plain);
+    $plain = preg_replace('#\[/?(?:column|block|tabs|tab|timeline|item|collapse|scode|button|tag|post|login|reply)\b[^\]]*\]#u', '', $plain);
+    $plain = strip_tags($plain);
+    $plain = preg_replace('/!\[[^\]]*\]\([^)]*\)/u', '', $plain);
+    $plain = preg_replace('/\[([^\]]+)\]\([^)]*\)/u', '$1', $plain);
+    $plain = preg_replace('/[`*_~>#]+/u', ' ', $plain);
+    $plain = trim(preg_replace('/\s+/u', ' ', $plain));
+    if ($plain === '') { return ''; }
+    if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+        if (mb_strlen($plain, 'UTF-8') > $maxLen) {
+            $plain = mb_substr($plain, 0, $maxLen, 'UTF-8') . '...';
+        }
+    } elseif (strlen($plain) > $maxLen) {
+        $plain = substr($plain, 0, $maxLen) . '...';
+    }
+    return $plain;
 }
 
 function fluxgrid_asset_url($options, $asset)
@@ -1049,6 +1084,42 @@ function themeFields($layout)
     $layout->addItem($cover);
     $layout->addItem($summary);
     $layout->addItem($pinned);
+    $layout->addItem($badge);
+}
+
+/**
+ * 独立页面 (page) 的自定义字段。Typecho 对 post / page 走两个不同钩子,
+ * 没有 themePageFields 时角标/封面/摘要在页面编辑器里就只能去通用「自定义字段」里手填。
+ * 这里复用 themeFields 的字段定义, 但只给 page 暴露真正会用到的几项 (置顶只对文章生效)。
+ */
+function themePageFields($layout)
+{
+    $cover = new Typecho_Widget_Helper_Form_Element_Text(
+        'cover',
+        null,
+        '',
+        _t('封面图地址'),
+        _t('页面头图。建议 16:9 或更宽。')
+    );
+
+    $summary = new Typecho_Widget_Helper_Form_Element_Textarea(
+        'summary',
+        null,
+        '',
+        _t('摘要文案'),
+        _t('用于页面 banner 下方的导语，留空则自动截取摘要。')
+    );
+
+    $badge = new Typecho_Widget_Helper_Form_Element_Text(
+        'badge',
+        null,
+        '',
+        _t('角标文案'),
+        _t('如 ABOUT、CONTACT 等，显示在页面 banner 左上角，留空则使用默认值 PAGE。')
+    );
+
+    $layout->addItem($cover);
+    $layout->addItem($summary);
     $layout->addItem($badge);
 }
 

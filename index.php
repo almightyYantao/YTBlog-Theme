@@ -147,24 +147,10 @@ if (!empty($stickyCids) && class_exists('Typecho_Db')) {
                 $image = fluxgrid_fallback_image($this->options, $cid);
             }
 
-            // 摘要: summary 字段优先, 否则用文章正文截取
-            if (!empty($fields['summary'])) {
-                $excerpt = preg_replace('/\s+/u', ' ', $fields['summary']);
-            } else {
-                $plain = preg_replace('/<!--.*?-->/us', '', (string) $row['text']);
-                $plain = preg_replace('/```[\s\S]*?```/u', ' ', $plain);
-                $plain = strip_tags($plain);
-                $plain = preg_replace('/!\[[^\]]*\]\([^)]*\)/u', '', $plain);
-                $plain = preg_replace('/\[([^\]]+)\]\([^)]*\)/u', '$1', $plain);
-                $plain = trim(preg_replace('/\s+/u', ' ', $plain));
-                if (function_exists('mb_strlen') && function_exists('mb_substr')) {
-                    $excerpt = mb_strlen($plain, 'UTF-8') > 140
-                        ? mb_substr($plain, 0, 140, 'UTF-8') . '...'
-                        : $plain;
-                } else {
-                    $excerpt = strlen($plain) > 140 ? substr($plain, 0, 140) . '...' : $plain;
-                }
-            }
+            // 摘要: summary 字段优先, 否则用文章正文截取。两路都要剥短代码,
+            // 否则置顶卡片会把 [scode]/[button]/[tag] 这些当成纯文本展示。
+            $excerptSource = !empty($fields['summary']) ? (string) $fields['summary'] : (string) $row['text'];
+            $excerpt = fluxgrid_plain_excerpt($excerptSource, 140);
 
             // 用 Typecho_Router 生成永久链接
             $row['type'] = 'post';

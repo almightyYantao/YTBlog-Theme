@@ -154,17 +154,7 @@ function fluxgrid_render_post_card($cid, $attrs = array())
 
         $excerpt = '';
         if ($size !== 'small' && isset($row['text'])) {
-            $excerpt = preg_replace('/<!--.*?-->/us', '', $row['text']);
-            $excerpt = preg_replace('/```[\s\S]*?```/u', ' ', $excerpt);
-            $excerpt = strip_tags($excerpt);
-            $excerpt = preg_replace('/!\[[^\]]*\]\([^)]*\)/u', '', $excerpt);
-            $excerpt = preg_replace('/\[([^\]]+)\]\([^)]*\)/u', '$1', $excerpt);
-            $excerpt = preg_replace('/\[\/?[A-Za-z][^\]]*\]/u', '', $excerpt);
-            $excerpt = preg_replace('/[`*_~>#]+/u', ' ', $excerpt);
-            $excerpt = trim(preg_replace('/\s+/u', ' ', $excerpt));
-            if (function_exists('mb_substr') && function_exists('mb_strlen') && mb_strlen($excerpt, 'UTF-8') > 84) {
-                $excerpt = mb_substr($excerpt, 0, 84, 'UTF-8') . '...';
-            }
+            $excerpt = fluxgrid_plain_excerpt((string) $row['text'], 84);
         }
 
         $title = fluxgrid_escape($row['title']);

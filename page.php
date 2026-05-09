@@ -7,6 +7,8 @@ if ($pageBannerImage === '' && $pageCid > 0) {
     $pageBannerImage = fluxgrid_fallback_image($this->options, $pageCid);
 }
 $pageExcerpt = fluxgrid_excerpt($this, 140);
+$pageBadge = fluxgrid_post_field($this, 'badge');
+if ($pageBadge === '') { $pageBadge = 'PAGE'; }
 ?>
 <main class="site-main">
     <article class="article-shell article-page">
@@ -22,7 +24,7 @@ $pageExcerpt = fluxgrid_excerpt($this, 140);
             <div class="page-banner-surface"></div>
 
             <div class="flux-container page-banner-inner">
-                <span class="eyebrow">// PAGE</span>
+                <span class="eyebrow">// <?php echo fluxgrid_escape($pageBadge); ?></span>
                 <h1><?php $this->title(); ?></h1>
                 <?php if ($pageExcerpt !== ''): ?>
                     <p><?php echo fluxgrid_escape($pageExcerpt); ?></p>
