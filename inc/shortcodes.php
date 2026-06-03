@@ -229,6 +229,51 @@ function fluxgrid_parse_shortcodes($content, $archive = null)
         $content
     );
 
+    // Markdown 的表格解析器会把"紧贴表格行、中间没有空行"的块级短代码标记(如
+    // [/collapse]、[/column])误当成表格的一行,塞进 <td> 里。等短代码替换时这些标记
+    // 会变成 </div></details> 之类的闭合标签,死在单元格内,导致 <details>/<div> 无法
+    // 正常闭合,进而把后续的页脚、目录侧栏整段吞掉、撑破文章 grid 布局。这里先把
+    // "只由短代码标记组成的表格行"拆出来:闭合标记挪到 </table> 之后,开始标记挪到
+    // <table> 之前,使后续替换能正确配对。
+    $fxBlockMarkers = 'column|block|tabs|tab|timeline|item|collapse|scode|button|tag|post|login|reply';
+    $content = preg_replace_callback(
+        '#<table\b.*?</table>#is',
+        function ($m) use ($fxBlockMarkers) {
+            $before = '';
+            $after = '';
+            $markerRe = '\[/?(?:' . $fxBlockMarkers . ')\b[^\]]*\]';
+            $table = preg_replace_callback(
+                '#<tr\b[^>]*>(.*?)</tr>#is',
+                function ($rm) use ($markerRe, &$before, &$after) {
+                    // 行的纯文本:去标签(含 <br>)、&nbsp;、空白
+                    $text = preg_replace('#<[^>]+>#', '', $rm[1]);
+                    $text = preg_replace('#&nbsp;#i', '', (string) $text);
+                    $text = trim((string) $text);
+                    if ($text === '') {
+                        return $rm[0]; // 真·空行,保留
+                    }
+                    // 整行只由块级短代码标记组成才处理,含真实内容则原样保留
+                    if (!preg_match('#^(?:\s*' . $markerRe . '\s*)+$#u', $text)) {
+                        return $rm[0];
+                    }
+                    if (preg_match_all('#' . $markerRe . '#u', $text, $mm)) {
+                        foreach ($mm[0] as $marker) {
+                            if (strpos($marker, '[/') === 0) {
+                                $after .= $marker;
+                            } else {
+                                $before .= $marker;
+                            }
+                        }
+                    }
+                    return ''; // 删掉这个垃圾行
+                },
+                $m[0]
+            );
+            return $before . $table . $after;
+        },
+        $content
+    );
+
     // Markdown 会把块级 shortcode 标记也包进 <p>,破坏 column/block/tabs/timeline
     // 等结构的父子关系,同时残留 </p><p> 污染后续节点(例如让相邻 flex 子元素顶不齐)。
     // 策略:对每个 <p>...</p>,把"带 body 的短代码(整段 tag+body+/tag)"和单标记全剥掉,
