@@ -44,7 +44,13 @@
     });
 
     nav.querySelectorAll('a').forEach(function (link) {
-      link.addEventListener('click', function () { setNavState(false); });
+      link.addEventListener('click', function () {
+        setNavState(false);
+        // 桌面端二级菜单靠 CSS :hover / :focus-within 显示。点击下拉链接后焦点会
+        // 留在链接上,:focus-within 持续为真 → 菜单常驻不收(PJAX 不整页刷新更明显)。
+        // 主动 blur 释放 focus-within,鼠标移开即收起。
+        if (typeof link.blur === 'function') { link.blur(); }
+      });
     });
 
     document.addEventListener('click', function (event) {
