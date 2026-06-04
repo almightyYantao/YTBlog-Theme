@@ -210,6 +210,13 @@ console.log('[FluxGrid Music] script block executed');
 <script src="https://cdn.jsdelivr.net/npm/glightbox@3.3.0/dist/js/glightbox.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/DIYgod/OwO@master/dist/OwO.min.css">
 <script src="https://cdn.jsdelivr.net/gh/DIYgod/OwO@master/dist/OwO.min.js"></script>
+<script type="module">
+  // 本地 vendored 的 motion(motion.dev v11.18.2),不走第三方 CDN。
+  // 加载后挂到全局,theme.js 在切换 hero banner 时按需取用,取不到则回退纯 CSS 过渡。
+  import { animate } from <?php echo json_encode(fluxgrid_asset_url($this->options, 'assets/js/vendor/motion.js'), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+  window.MotionAnimate = animate;
+  window.dispatchEvent(new Event('fluxgrid:motion-ready'));
+</script>
 <script src="<?php echo fluxgrid_escape(fluxgrid_asset_url($this->options, 'assets/js/theme.js')); ?>"></script>
 <?php $this->footer(); ?>
 </body>

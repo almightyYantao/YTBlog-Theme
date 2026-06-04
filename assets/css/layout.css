@@ -252,16 +252,54 @@ html[data-theme="light"] .nav-toggle:hover { color: var(--blue-2); }
 /* ============ Hero ============ */
 .hero-section { padding: 0; }
 
-.hero-carousel { position: relative; }
+/* grid 堆叠:所有 slide 占同一格,容器自动取最高 slide 的高度(不塌陷),
+   切换时用 opacity + transform 做交叉淡入淡出,而不是 display 瞬切。
+   .hero-controls 是 position:absolute,脱离 grid 流,不受影响。 */
+.hero-carousel {
+  position: relative;
+  display: grid;
+  isolation: isolate;
+  overflow: hidden; /* 裁掉 slide 左右滑动时的水平溢出,避免出现横向滚动条 */
+}
 
 .hero-slide {
-  display: none;
+  grid-area: 1 / 1;
   padding: 90px 0 40px;
   position: relative;
   overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(28px); /* 无 motion 时的横向淡入兜底(motion 在则由 JS 接管为带方向滑动) */
+  pointer-events: none;
+  z-index: 1;
+  /* 失活:淡出 .7s,淡出结束后再 visibility:hidden(延迟保证能看到淡出) */
+  transition: opacity .7s ease, transform .7s ease, visibility 0s linear .7s;
 }
 
-.hero-slide.is-active { display: block; }
+.hero-slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+  z-index: 2;
+  transition: opacity .7s ease, transform .7s ease, visibility 0s;
+}
+
+/* motion(JS)接管动画时,关掉 CSS transition,避免两套动画叠加打架。
+   静止态仍由 .is-active 的 opacity/visibility/transform 定义(motion 动画
+   fill:none,播完会停回这里)。 */
+.hero-carousel--motion .hero-slide,
+.hero-carousel--motion .hero-slide.is-active {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide,
+  .hero-slide.is-active {
+    transform: none;
+    transition: opacity .2s ease, visibility 0s;
+  }
+}
 
 .hero-media {
   position: absolute;

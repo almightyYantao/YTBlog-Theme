@@ -390,14 +390,58 @@
         return !reducedMotionQuery.matches && !document.hidden;
       };
 
+      var motionReady = function () {
+        return typeof window.MotionAnimate === 'function';
+      };
+
       var setActiveSlide = function (index) {
-        activeIndex = (index + slides.length) % slides.length;
-        slides.forEach(function (slide, slideIndex) {
-          slide.classList.toggle('is-active', slideIndex === activeIndex);
-        });
+        var nextIndex = (index + slides.length) % slides.length;
+        var changed = nextIndex !== activeIndex;
+        // 方向:下一张(含自动播放/next/向后跳)为 +1,上一张为 -1。
+        // 用原始 index 与旧 activeIndex 比较,天然兼容首尾环绕(next 到末尾 index=len,
+        // prev 到开头 index=-1)。
+        var dir = index >= activeIndex ? 1 : -1;
+        activeIndex = nextIndex;
+
         dots.forEach(function (dot, dotIndex) {
           dot.classList.toggle('is-active', dotIndex === activeIndex);
         });
+
+        // motion 可用且未开启"减少动态效果":用 motion(本地 vendored)驱动
+        // 弹簧上浮 + 交叉淡入淡出;WAAPI fill 默认 none,动画结束后停留在
+        // .is-active 的 CSS 静止态,所以无需 commitStyles。否则回退纯 CSS 过渡。
+        if (motionReady() && !reducedMotionQuery.matches) {
+          var animate = window.MotionAnimate;
+          carousel.classList.add('hero-carousel--motion'); // 关掉 CSS transition,避免双重动画
+          slides.forEach(function (slide, slideIndex) {
+            var wasActive = slide.classList.contains('is-active');
+            var isActive = slideIndex === activeIndex;
+            slide.classList.toggle('is-active', isActive);
+
+            if (isActive && (changed || !wasActive)) {
+              // 新图从前进方向的外侧滑入:next 从右(+),prev 从左(-)
+              animate(slide, { opacity: [0, 1] }, { duration: 0.5, ease: [0.22, 1, 0.36, 1] });
+              animate(slide, { x: [dir * 60, 0] }, { type: 'spring', stiffness: 240, damping: 30 });
+            } else if (!isActive && wasActive && changed) {
+              slide.style.visibility = 'visible'; // 失活后 CSS 会立刻 hidden,这里保持可见等淡出播完
+              // 旧图向前进的反方向滑出:next 往左(-),prev 往右(+)
+              animate(slide, { x: [0, dir * -60] }, { duration: 0.45, ease: [0.4, 0, 1, 1] });
+              var ctrl = animate(slide, { opacity: [1, 0] }, { duration: 0.4, ease: [0.4, 0, 1, 1] });
+              var done = function () {
+                if (activeIndex !== slideIndex) { slide.style.visibility = ''; }
+              };
+              if (ctrl && ctrl.finished && typeof ctrl.finished.then === 'function') {
+                ctrl.finished.then(done, done);
+              } else {
+                window.setTimeout(done, 440);
+              }
+            }
+          });
+        } else {
+          slides.forEach(function (slide, slideIndex) {
+            slide.classList.toggle('is-active', slideIndex === activeIndex);
+          });
+        }
       };
 
       var startAutoplay = function () {
