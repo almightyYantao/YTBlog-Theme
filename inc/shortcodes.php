@@ -210,6 +210,33 @@ function fluxgrid_render_external_post_card($attrs)
     return $html;
 }
 
+// 把 GitHub 风格的 :shortname: 转成 Unicode emoji(如 :star: → ⭐)。
+// 映射表懒加载并静态缓存;表里没有的 :xxx: 原样保留,不误伤普通文本(如时间 10:30:00)。
+// 调用点在 <pre>/<code> 占位之后,所以代码块里的 :star: 不会被转换。
+function fluxgrid_emojify($content)
+{
+    if (!is_string($content) || strpos($content, ':') === false) {
+        return $content;
+    }
+    static $map = null;
+    if ($map === null) {
+        $file = __DIR__ . '/emoji-map.php';
+        $map = is_file($file) ? include $file : array();
+        if (!is_array($map)) { $map = array(); }
+    }
+    if (empty($map)) {
+        return $content;
+    }
+    return preg_replace_callback(
+        '/:([a-z0-9_+-]+):/i',
+        function ($m) use ($map) {
+            $key = strtolower($m[1]);
+            return isset($map[$key]) ? $map[$key] : $m[0];
+        },
+        $content
+    );
+}
+
 function fluxgrid_parse_shortcodes($content, $archive = null)
 {
     if (!is_string($content) || $content === '') {
@@ -228,6 +255,10 @@ function fluxgrid_parse_shortcodes($content, $archive = null)
         },
         $content
     );
+
+    // 代码块已被占位保护,这里把正文里的 :emoji: 短码转成真正的 emoji
+    // (按钮 icon=":star:"、callout/正文里的 :rocket: 等都受益)。
+    $content = fluxgrid_emojify($content);
 
     // Markdown 的表格解析器会把"紧贴表格行、中间没有空行"的块级短代码标记(如
     // [/collapse]、[/column])误当成表格的一行,塞进 <td> 里。等短代码替换时这些标记
