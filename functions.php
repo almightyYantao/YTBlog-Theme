@@ -875,6 +875,13 @@ li.fg-folded { display: none !important; }
         _t('Favicon'),
         _t('标签页小图标。留空使用主题内置蓝色方块 SVG。支持 ICO / PNG / SVG 绝对地址。')
     );
+    $siteStyle = new Typecho_Widget_Helper_Form_Element_Select(
+        'siteStyle',
+        array('default' => '默认（FluxGrid 极简科技）', 'memphis' => '孟菲斯（80s 波普 · 硬阴影 / 几何拼贴）'),
+        'default',
+        _t('站点视觉风格'),
+        _t('整站换肤，与「明 / 暗」相互独立——两种风格都各自有自己的明色和暗色。<br>孟菲斯风格会自动关闭粒子背景、启用硬边框 / 硬投影 / 几何装饰。')
+    );
 
     /* ═══ 2 个人卡片 ════════════════════════════════════════════ */
     $s2 = new Typecho_Widget_Helper_Form_Element_Text('__fg_s2', null, '',
@@ -1018,6 +1025,7 @@ li.fg-folded { display: none !important; }
     $form->addInput($footerText);
     $form->addInput($fallbackImage);
     $form->addInput($faviconUrl);
+    $form->addInput($siteStyle);
 
     $form->addInput($s2);
     $form->addInput($avatarUrl);

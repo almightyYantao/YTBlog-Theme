@@ -1,0 +1,381 @@
+@charset "UTF-8";
+/* ============================================================
+   孟菲斯换肤（Memphis skin）
+   —— 与 data-theme(明/暗) 正交：整套皮肤 scope 在 [data-style="memphis"]，
+      明/暗各有自己的一套变量。
+   —— 设计语言：硬边框(3px 描边黑) + 硬投影(实心偏移，无模糊) + 直角 +
+      波点纸背景 + 几何形状轻微旋转 + Archivo Black 展示字。
+   —— 只覆盖“视觉”，不改结构/JS。默认风格(default)完全不受影响。
+   ============================================================ */
+
+/* ---------- 1. Token：暗色孟菲斯（默认） ---------- */
+html[data-style="memphis"] {
+  /* 波普四原色 */
+  --m-pink:   #FF71CE;
+  --m-yellow: #FFCE5C;
+  --m-teal:   #86CCCA;
+  --m-purple: #6A7BB4;
+
+  /* 暗色底 + 亮描边 */
+  --m-bg:      #141019;
+  --m-surface: #1f1929;
+  --m-surface-2: #191320;
+  --m-ink:     #F7F3E8;   /* 描边 / 正文（暗色下取亮） */
+  --m-shadow:  #000000;
+
+  /* 覆盖主题语义变量，让通用组件跟着变 */
+  --bg:        var(--m-bg);
+  --bg-soft:   var(--m-surface-2);
+  --card:      var(--m-surface);
+  --card-2:    var(--m-surface-2);
+  --card-bg:   var(--m-surface);
+  --header-bg: var(--m-bg);
+  --input-bg:  var(--m-surface-2);
+  --border:      var(--m-ink);
+  --border-soft: rgba(247,243,232,0.28);
+  --text:    #EDE7D9;
+  --heading: #FFF9EE;
+  --body:    #DCD5C6;
+  --muted:   #B7AF9E;
+  --muted-2: #8E8674;
+  --blue:       var(--m-pink);
+  --blue-2:     var(--m-purple);
+  --blue-light: var(--m-yellow);
+  --green:  var(--m-teal);
+  --yellow: var(--m-yellow);
+  --purple: var(--m-purple);
+
+  --radius: 0px;
+  --radius-sm: 0px;
+  --shadow: 8px 8px 0 var(--m-shadow);
+
+  --font: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Noto Sans SC", "PingFang SC", sans-serif;
+  --font-display: "Archivo Black", var(--font);
+
+  /* 供 hard-panel/hard-shadow 复用 */
+  --m-border: 3px solid var(--m-ink);
+}
+
+/* ---------- 2. 全局底：波点纸 + 关闭粒子 ---------- */
+html[data-style="memphis"] #particle-bg { display: none !important; }
+
+html[data-style="memphis"] body {
+  font-family: var(--font);
+  background:
+    radial-gradient(var(--border-soft) 1.3px, transparent 1.3px) 0 0 / 22px 22px,
+    var(--m-bg);
+}
+
+html[data-style="memphis"] h1,
+html[data-style="memphis"] h2,
+html[data-style="memphis"] h3,
+html[data-style="memphis"] .section-heading,
+html[data-style="memphis"] .hero-copy h1,
+html[data-style="memphis"] .post-card-title,
+html[data-style="memphis"] .article-head h1 {
+  font-family: var(--font-display);
+  letter-spacing: .01em;
+  line-height: 1.15;
+}
+
+/* 选中/焦点：换成波普紫描边 */
+html[data-style="memphis"] :focus-visible {
+  outline: 3px solid var(--m-purple);
+  outline-offset: 3px;
+}
+
+/* ---------- 3. 通用“硬卡片”：描边 + 硬投影 + 直角 ---------- */
+html[data-style="memphis"] .site-header,
+html[data-style="memphis"] .post-card,
+html[data-style="memphis"] .side-card,
+html[data-style="memphis"] .featured-card,
+html[data-style="memphis"] .hero-surface,
+html[data-style="memphis"] .hero-slide,
+html[data-style="memphis"] .hero-side-visual,
+html[data-style="memphis"] .code-window,
+html[data-style="memphis"] .side-terminal,
+html[data-style="memphis"] .page-banner-inner,
+html[data-style="memphis"] .nav-dropdown,
+html[data-style="memphis"] .search-box,
+html[data-style="memphis"] .empty-panel,
+html[data-style="memphis"] .subscribe,
+html[data-style="memphis"] .comment-form-panel,
+html[data-style="memphis"] .article-toc-panel,
+html[data-style="memphis"] .profile-body,
+html[data-style="memphis"] .side-profile {
+  border: var(--m-border) !important;
+  border-radius: 0 !important;
+  box-shadow: 8px 8px 0 var(--m-shadow) !important;
+  backdrop-filter: none !important;
+}
+
+/* 卡片错落旋转（Memphis 灵魂），hover 归正 */
+html[data-style="memphis"] .post-stack .post-card { transform: rotate(-1deg); transition: transform .15s; }
+html[data-style="memphis"] .post-stack .post-card:nth-child(2n) { transform: rotate(.8deg); box-shadow: 8px 8px 0 var(--m-pink) !important; }
+html[data-style="memphis"] .post-stack .post-card:nth-child(3n) { box-shadow: 8px 8px 0 var(--m-teal) !important; }
+html[data-style="memphis"] .post-stack .post-card:hover,
+html[data-style="memphis"] .featured-card:hover,
+html[data-style="memphis"] .side-card:hover { transform: rotate(0) translateY(-4px); }
+
+html[data-style="memphis"] .featured-card:nth-child(2n) { box-shadow: 8px 8px 0 var(--m-yellow) !important; }
+html[data-style="memphis"] .side-card { box-shadow: 6px 6px 0 var(--m-purple) !important; }
+
+/* 顶栏：贴顶不旋转，粗底边 */
+html[data-style="memphis"] .site-header {
+  box-shadow: none !important;
+  border: 0 !important;
+  border-bottom: var(--m-border) !important;
+  background: var(--m-bg) !important;
+}
+
+/* ---------- 4. 导航 ---------- */
+html[data-style="memphis"] .brand-mark {
+  background: var(--m-pink);
+  border: var(--m-border);
+  border-radius: 0;
+  transform: rotate(-6deg);
+}
+html[data-style="memphis"] .brand-text { font-family: var(--font-display); }
+html[data-style="memphis"] .site-nav > a,
+html[data-style="memphis"] .nav-link { font-weight: 700; border-bottom: 3px solid transparent; }
+html[data-style="memphis"] .site-nav > a:hover,
+html[data-style="memphis"] .site-nav > a.is-active,
+html[data-style="memphis"] .nav-link:hover { border-bottom-color: var(--m-pink); color: var(--heading); }
+
+/* ---------- 5. 按钮：硬投影 + 按下位移 ---------- */
+html[data-style="memphis"] .button,
+html[data-style="memphis"] .subscribe button,
+html[data-style="memphis"] .comment-form-panel button[type="submit"] {
+  font-family: var(--font-display);
+  border: var(--m-border) !important;
+  border-radius: 0 !important;
+  background: var(--m-surface);
+  color: var(--heading);
+  box-shadow: 5px 5px 0 var(--m-shadow);
+  transition: transform .12s, box-shadow .12s;
+}
+html[data-style="memphis"] .button:hover {
+  transform: translate(-2px,-2px);
+  box-shadow: 7px 7px 0 var(--m-shadow);
+}
+html[data-style="memphis"] .button:active {
+  transform: translate(4px,4px);
+  box-shadow: 0 0 0 var(--m-shadow);
+}
+html[data-style="memphis"] .button-primary   { background: var(--m-yellow); color: #111; }
+html[data-style="memphis"] .button-secondary { background: var(--m-pink);   color: #111; }
+
+/* ---------- 6. Hero ---------- */
+html[data-style="memphis"] .eyebrow,
+html[data-style="memphis"] .section-tag {
+  display: inline-block;
+  font-weight: 700;
+  background: var(--m-teal);
+  color: #111;
+  border: var(--m-border);
+  border-radius: 0;
+  padding: 6px 14px;
+  transform: rotate(2deg);
+}
+html[data-style="memphis"] .section-heading {
+  background: var(--m-yellow);
+  color: #111;
+  border: var(--m-border);
+  box-shadow: 6px 6px 0 var(--m-shadow);
+  padding: 4px 14px;
+  display: inline-block;
+  transform: rotate(-1deg);
+}
+/* hero 标题部分高亮（JS 注入 .m-hl，仿 Demo 的 hl-pink / hl-yellow 色块） */
+html[data-style="memphis"] .hero-copy h1 .m-hl {
+  color: #111;
+  background: var(--m-yellow);
+  padding: 0 .16em;
+  border-radius: 0;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+html[data-style="memphis"] .hero-copy h1 .m-hl--pink { background: var(--m-pink); color: #111; }
+html[data-style="memphis"] .hero-copy h1 .m-hl--teal { background: var(--m-teal); color: #111; }
+
+/* hero 左右切换箭头 / 圆点 */
+html[data-style="memphis"] .hero-arrow {
+  border: var(--m-border) !important;
+  border-radius: 0 !important;
+  background: var(--m-surface) !important;
+  color: var(--heading) !important;
+  box-shadow: 4px 4px 0 var(--m-shadow);
+}
+html[data-style="memphis"] .hero-dot { border-radius: 0; width: 12px; height: 12px; background: var(--border); }
+html[data-style="memphis"] .hero-dot.is-active { background: var(--m-pink); }
+
+/* ---------- 7. 表单 ---------- */
+html[data-style="memphis"] input[type="text"],
+html[data-style="memphis"] input[type="email"],
+html[data-style="memphis"] input[type="search"],
+html[data-style="memphis"] input[type="url"],
+html[data-style="memphis"] textarea,
+html[data-style="memphis"] .search-box input {
+  background: var(--input-bg);
+  border: var(--m-border) !important;
+  border-radius: 0 !important;
+  color: var(--heading);
+}
+html[data-style="memphis"] input:focus-visible,
+html[data-style="memphis"] textarea:focus-visible {
+  outline: none;
+  box-shadow: 5px 5px 0 var(--m-yellow);
+}
+
+/* ---------- 8. 徽章 / 卡片角标 ---------- */
+html[data-style="memphis"] .card-badge,
+html[data-style="memphis"] .card-badge-tag {
+  border: 2px solid var(--m-ink);
+  border-radius: 0;
+  background: var(--m-surface-2);
+  font-weight: 700;
+}
+html[data-style="memphis"] .card-badge:nth-child(2n) { background: var(--m-teal); color:#111; }
+
+/* ---------- 8b. 文章详情：标签 chip（头部 tags-list + 页脚 article-tags）---------- */
+html[data-style="memphis"] .tags-list a,
+html[data-style="memphis"] .article-tags a {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 5px 12px;
+  margin: 0 9px 9px 0;
+  color: #111;
+  background: var(--m-yellow);
+  border: 2px solid var(--m-ink);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 var(--m-shadow);
+  text-decoration: none;
+  transition: transform .12s, box-shadow .12s;
+}
+html[data-style="memphis"] .tags-list a:nth-of-type(3n+2),
+html[data-style="memphis"] .article-tags a:nth-of-type(3n+2) { background: var(--m-pink); }
+html[data-style="memphis"] .tags-list a:nth-of-type(3n+3),
+html[data-style="memphis"] .article-tags a:nth-of-type(3n+3) { background: var(--m-teal); }
+html[data-style="memphis"] .tags-list a:hover,
+html[data-style="memphis"] .article-tags a:hover {
+  transform: translate(-2px,-2px);
+  box-shadow: 5px 5px 0 var(--m-shadow);
+}
+
+/* ---------- 8c. 文章详情：代码块 ---------- */
+html[data-style="memphis"] .article-content pre {
+  border: var(--m-border) !important;
+  border-radius: 0 !important;
+  box-shadow: 6px 6px 0 var(--m-shadow);
+  background: #14131a;
+}
+html[data-style="memphis"] .article-content pre .code-bar {
+  background: var(--m-purple);
+  border-bottom: var(--m-border);
+}
+html[data-style="memphis"] .article-content pre .code-bar-dots .code-dot {
+  border-radius: 0;
+  border: 1.5px solid #111;
+}
+html[data-style="memphis"] .article-content pre .code-bar-dots .code-dot:nth-child(1) { background: var(--m-pink); }
+html[data-style="memphis"] .article-content pre .code-bar-dots .code-dot:nth-child(2) { background: var(--m-yellow); }
+html[data-style="memphis"] .article-content pre .code-bar-dots .code-dot:nth-child(3) { background: var(--m-teal); }
+html[data-style="memphis"] .article-content pre .code-lang { color: #fff; font-weight: 700; }
+html[data-style="memphis"] .article-content pre .code-copy {
+  border: 2px solid #111;
+  border-radius: 0;
+  background: var(--m-yellow);
+  color: #111;
+  font-weight: 700;
+}
+html[data-style="memphis"] .article-content pre .code-copy:hover {
+  background: #fff; color: #111; border-color: #111;
+}
+html[data-style="memphis"] .article-content pre .code-copy.is-copied {
+  background: var(--m-teal); color: #111; border-color: #111;
+}
+/* 代码块内的 code：透明底 + 浅字（深框里可读，明暗一致） */
+html[data-style="memphis"] .article-content pre code {
+  background: transparent !important;
+  border: 0 !important;
+  color: #EDE7D9 !important;
+}
+
+/* 行内 code：只命中真正的行内 code（排除 pre 内），否则浅色主题下浅字浅底糊掉 */
+html[data-style="memphis"] .article-content :not(pre) > code {
+  border: 2px solid var(--m-ink);
+  border-radius: 0;
+  background: var(--m-surface-2);
+  color: var(--heading);
+  white-space: nowrap;   /* chip 作为整体换行，避免边框被拦腰折断 */
+}
+
+/* ---------- 9. 页脚 ---------- */
+html[data-style="memphis"] .site-footer,
+html[data-style="memphis"] footer.site-footer {
+  border-top: var(--m-border);
+  background: var(--m-surface-2);
+}
+
+/* ---------- 10. 短代码（callout / collapse / tabs / timeline / card）通用硬化 ---------- */
+html[data-style="memphis"] .sc-callout,
+html[data-style="memphis"] .sc-collapse,
+html[data-style="memphis"] .sc-tabs,
+html[data-style="memphis"] .sc-timeline-list,
+html[data-style="memphis"] .sc-post-card {
+  border: var(--m-border) !important;
+  border-radius: 0 !important;
+  box-shadow: 6px 6px 0 var(--m-shadow) !important;
+}
+html[data-style="memphis"] .sc-button {
+  font-family: var(--font-display);
+  border: var(--m-border) !important;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 var(--m-shadow);
+}
+html[data-style="memphis"] .sc-button--round { border-radius: 0 !important; }
+
+/* ---------- 11. 回到顶部 ---------- */
+html[data-style="memphis"] .back-to-top {
+  border: var(--m-border);
+  border-radius: 0;
+  background: var(--m-yellow);
+  color: #111;
+  box-shadow: 4px 4px 0 var(--m-shadow);
+  backdrop-filter: none;
+}
+
+/* ---------- 12. 减少动效偏好 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html[data-style="memphis"] .post-stack .post-card,
+  html[data-style="memphis"] .featured-card,
+  html[data-style="memphis"] .side-card { transform: none !important; }
+}
+
+/* ============================================================
+   浅色孟菲斯：只覆盖“底色系”，装饰(硬边框/投影/旋转)沿用上面
+   ============================================================ */
+html[data-style="memphis"][data-theme="light"] {
+  --m-bg:      #FFF9EE;
+  --m-surface: #FFFFFF;
+  --m-surface-2: #FFF4DD;
+  --m-ink:     #111111;
+  --m-shadow:  #111111;
+
+  --bg:        var(--m-bg);
+  --bg-soft:   var(--m-surface-2);
+  --card:      var(--m-surface);
+  --card-2:    var(--m-surface-2);
+  --card-bg:   var(--m-surface);
+  --header-bg: var(--m-bg);
+  --input-bg:  #FFFFFF;
+  --border:      var(--m-ink);
+  --border-soft: rgba(17,17,17,0.22);
+  --text:    #1b1b1b;
+  --heading: #111111;
+  --body:    #2f2f2f;
+  --muted:   #4a4a4a;
+  --muted-2: #6b6b6b;
+}

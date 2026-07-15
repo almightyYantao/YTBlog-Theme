@@ -18,6 +18,8 @@ if ($this->is('post') || $this->is('page')) {
 }
 
 $logoText = fluxgrid_option($this->options, 'logoText', $siteTitle);
+$siteStyle = fluxgrid_option($this->options, 'siteStyle', 'default');
+if ($siteStyle !== 'memphis') { $siteStyle = 'default'; }
 $pageDescription = $this->is('post') || $this->is('page')
     ? fluxgrid_excerpt($this, 120)
     : fluxgrid_option($this->options, 'footerText', (string) $this->options->description);
@@ -102,7 +104,7 @@ if (count($navItems) > $navVisibleLimit) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-style="<?php echo fluxgrid_escape($siteStyle); ?>">
 <head>
     <meta charset="<?php $this->options->charset(); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -121,6 +123,46 @@ if (count($navItems) > $navVisibleLimit) {
     <link rel="preconnect" href="https://fonts.loli.net">
     <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
     <link href="https://fonts.loli.net/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <?php if ($siteStyle === 'memphis'): ?>
+    <link href="https://fonts.loli.net/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+    /* 孟菲斯:给 hero 轮播标题尾部一段套色块(仿 Demo 的 hl-pink/hl-yellow) */
+    (function () {
+      if (document.documentElement.getAttribute('data-style') !== 'memphis') return;
+      var COLORS = ['', 'm-hl--pink', 'm-hl--teal']; // '' = 默认黄
+      function pickSeg(raw) {
+        var text = String(raw).trim();
+        if (text.length <= 2) return ['', text, ''];
+        if (/\s/.test(text)) {
+          var parts = text.split(/\s+/);
+          var n = parts.length >= 4 ? 2 : 1;
+          var head = parts.slice(0, parts.length - n).join(' ');
+          return [head ? head + ' ' : '', parts.slice(parts.length - n).join(' '), ''];
+        }
+        var segLen = Math.min(6, Math.max(2, Math.ceil(text.length * 0.4)));
+        var cut = text.length - segLen;
+        return [text.slice(0, cut), text.slice(cut), ''];
+      }
+      function wrap(a, colorClass) {
+        if (!a || a.querySelector('.m-hl')) return;
+        var seg = pickSeg(a.textContent);
+        a.textContent = '';
+        if (seg[0]) a.appendChild(document.createTextNode(seg[0]));
+        var span = document.createElement('span');
+        span.className = 'm-hl' + (colorClass ? ' ' + colorClass : '');
+        span.textContent = seg[1];
+        a.appendChild(span);
+        if (seg[2]) a.appendChild(document.createTextNode(seg[2]));
+      }
+      function run() {
+        var links = document.querySelectorAll('[data-hero-slide] .hero-copy h1 a');
+        Array.prototype.forEach.call(links, function (a, i) { wrap(a, COLORS[i % COLORS.length]); });
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+      else run();
+    })();
+    </script>
+    <?php endif; ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox@3.3.0/dist/css/glightbox.min.css">
     <?php
       $fluxCssFiles = array(
@@ -139,6 +181,9 @@ if (count($navItems) > $navVisibleLimit) {
           'music.css',         // 全站迷你音乐播放器
           'sticky.css',        // 首页置顶文章区
       );
+      if ($siteStyle === 'memphis') {
+          $fluxCssFiles[] = 'style-memphis.css';  // 孟菲斯换肤覆盖层(全部 scope 在 [data-style="memphis"])
+      }
       foreach ($fluxCssFiles as $fluxCssFile) {
           echo '    <link rel="stylesheet" href="' . fluxgrid_escape(fluxgrid_asset_url($this->options, 'assets/css/' . $fluxCssFile)) . '">' . "\n";
       }
