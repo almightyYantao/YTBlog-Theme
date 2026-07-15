@@ -23,7 +23,7 @@
             <?php endif; ?>
 
             <?php if ($allowComment): ?>
-                <div class="comment-form-panel">
+                <div class="comment-form-panel" id="<?php echo $this->respondId; ?>">
                     <h3>写下评论</h3>
                     <form method="post" action="<?php $this->commentUrl(); ?>" class="comment-form">
                         <?php if ($this->user->hasLogin()): ?>
@@ -59,6 +59,7 @@
                         </div>
 
                         <button class="button button-primary" type="submit">提交评论</button>
+                        <?php $comments->cancelReply('取消回复'); ?>
                     </form>
                 </div>
             <?php else: ?>
